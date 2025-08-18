@@ -4,14 +4,10 @@ import viteLogo from '/vite.svg'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
     <div className="bg-red-500 p-4">
-      <h1 className="text-white">Tailwind Test</h1>
+      <h1 className="text-white">Tailwind Test more</h1>
     </div>
-    </>
   )
 }
 
