@@ -241,7 +241,7 @@ const TripDetail = () => {
       
       <div style={{ marginTop: '2rem' }}>
         <h3>👥 Participants ({trip.participants.length})</h3>
-        <ul>
+        <ul style={{ listStyle: 'none', padding: 0 }}>
           {trip.participants.map((participant, index) => (
             <li key={index}>{participant}</li>
           ))}
@@ -250,7 +250,7 @@ const TripDetail = () => {
       
       <div style={{ marginTop: '2rem' }}>
         <h3>🎯 Activities ({trip.activities.length})</h3>
-        <ul>
+        <ul style={{ listStyle: 'none', padding: 0 }}>
           {trip.activities.map(activity => (
             <li key={activity.id} style={{ marginBottom: '1rem', padding: '1rem', border: '1px solid #ddd', borderRadius: '0.5rem' }}>
               <div><strong>{activity.name}</strong> <span style={{ backgroundColor: '#e5e7eb', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.875rem' }}>{activity.category}</span></div>

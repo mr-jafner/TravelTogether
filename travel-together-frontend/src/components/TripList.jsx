@@ -221,7 +221,7 @@ const TripList = () => {
   return (
     <div>
       <h2>My Trips</h2>
-      <ul>
+      <ul style={{listStyle: 'none',padding:0}}>
         {sampleTrips.map(trip => (
           <li key={trip.id}>
              <Link 
