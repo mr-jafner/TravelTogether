@@ -1,8 +1,10 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 
-const TripList = () => {
-  // Sample trip data - realistic scenarios for development/testing
+const TripDetail = () => {
+  const { tripId } = useParams();
+  
+  // Same exact data structure as your TripList
   const sampleTrips = [
     {
       id: 1,
@@ -208,7 +210,7 @@ const TripList = () => {
     }
   ];
 
-  // Helper function to format date for display
+  // Same formatDate function
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', { 
@@ -218,47 +220,55 @@ const TripList = () => {
     });
   };
 
+  const trip = sampleTrips.find(t => t.id === parseInt(tripId));
+
+  if (!trip) {
+    return (
+      <div style={{ padding: '2rem' }}>
+        <h2>Trip not found</h2>
+        <Link to="/trips">← Back to My Trips</Link>
+      </div>
+    );
+  }
+
   return (
-    <div>
-      <h2>My Trips</h2>
-      <ul>
-        {sampleTrips.map(trip => (
-          <li key={trip.id}>
-             <Link 
-              to={`/trips/${trip.id}`} 
-              style={{ 
-                textDecoration: 'none', 
-                color: 'inherit',
-                display: 'block',
-                padding: '1rem',
-                border: '1px solid #ccc',
-                borderRadius: '0.5rem',
-                marginBottom: '1rem',
-                backgroundColor: '#f9f9f9',
-                cursor: 'pointer'
-              }}
-              onMouseEnter={(e) => e.target.style.backgroundColor = '#f0f0f0'}
-              onMouseLeave={(e) => e.target.style.backgroundColor = '#f9f9f9'}
-            >
-             <div>
-                <strong>{trip.name}</strong>
-              </div>
-              <div>Destination: {trip.destination}</div>
-              <div>
-                Dates: {formatDate(trip.startDate)} - {formatDate(trip.endDate)}
-              </div>
-              <div>
-                Participants ({trip.participants.length}): {trip.participants.join(', ')}
-              </div>
-              <div>
-                <strong>Activities ({trip.activities.length}):</strong> Click to view details
-              </div> 
-            </Link>
+    <div style={{ padding: '2rem' }}>
+      <Link to="/trips" style={{ marginBottom: '1rem', display: 'inline-block' }}>← Back to My Trips</Link>
+      
+      <h1>{trip.name}</h1>
+      <h2>📍 {trip.destination}</h2>
+      <p><strong>Dates:</strong> {formatDate(trip.startDate)} - {formatDate(trip.endDate)}</p>
+      
+      <div style={{ marginTop: '2rem' }}>
+        <h3>👥 Participants ({trip.participants.length})</h3>
+        <ul>
+          {trip.participants.map((participant, index) => (
+            <li key={index}>{participant}</li>
+          ))}
+        </ul>
+      </div>
+      
+      <div style={{ marginTop: '2rem' }}>
+        <h3>🎯 Activities ({trip.activities.length})</h3>
+        <ul>
+          {trip.activities.map(activity => (
+            <li key={activity.id} style={{ marginBottom: '1rem', padding: '1rem', border: '1px solid #ddd', borderRadius: '0.5rem' }}>
+              <div><strong>{activity.name}</strong> <span style={{ backgroundColor: '#e5e7eb', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.875rem' }}>{activity.category}</span></div>
+              <div>💰 ${activity.cost} • ⏱️ {activity.duration} • 📍 {activity.location}</div>
+              <div>👍 {activity.votes} votes</div>
             </li>
-        ))}
-      </ul>
+          ))}
+        </ul>
+      </div>
+
+      {/* Placeholder sections for future features */}
+      <div style={{ marginTop: '2rem', padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '0.5rem' }}>
+        <h3>📋 Trip Info</h3>
+        <p>Trip logistics panel coming soon...</p>
+        <p><em>This will include: Wi-Fi passwords, room numbers, flight details, important notes, etc.</em></p>
+      </div>
     </div>
   );
 };
 
-export default TripList;
+export default TripDetail;

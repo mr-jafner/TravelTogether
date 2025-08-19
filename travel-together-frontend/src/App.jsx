@@ -2,27 +2,10 @@ import { useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
-/*import { BrowserRouter } from 'react-router-dom';
-import Header from './components/Header';
-
-function App() {
-  return (
-    <BrowserRouter>
-      <Header />
-       
-      <div className="bg-red-500 p-4">
-        <h1 className="text-white">Tailwind Test more</h1>
-      </div>
-
-    </BrowserRouter>
-  )
-}
-
-export default App*/
-
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
 import TripList from './components/TripList'
+import TripDetail from './components/TripDetail';
 
 // Temporary placeholder components (you'll build these later)
 function Dashboard() {
@@ -81,6 +64,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/trips" element={<MyTrips />} />
+          <Route path="/trips/:tripId" element={<TripDetail />} />
           <Route path="/feed" element={<Feed />} />
           {/* Add more routes as you build components */}
         </Routes>
