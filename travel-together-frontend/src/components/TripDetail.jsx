@@ -1,18 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import ActivityRating from './ActivityRating'; // Add this import
 
 const TripDetail = () => {
   const { tripId } = useParams();
 
   // Add state to track all activity ratings
-  const [activityRatings, setActivityRatings] = useState({});
 
-  const handleActivityRatingChange = (activityId, ratings) => {
-    setActivityRatings(prev => ({
-      ...prev,
-      [activityId]: ratings
-    }));
-  };
   
   // Same exact data structure as your TripList
   const sampleTrips = [
@@ -232,6 +226,28 @@ const TripDetail = () => {
 
   const trip = sampleTrips.find(t => t.id === parseInt(tripId));
 
+   const [activityRatings, setActivityRatings] = useState(() => {
+    if (!trip) return {};
+    
+    const initialRatings = {};
+    trip.activities.forEach(activity => {
+      const participantRatings = {};
+      trip.participants.forEach(participant => {
+        // Generate realistic sample ratings (0-5) for demo
+        participantRatings[participant] = Math.floor(Math.random() * 6);
+      });
+      initialRatings[activity.id] = participantRatings;
+    });
+    return initialRatings;
+  });
+
+  const handleActivityRatingChange = (activityId, ratings) => {
+    setActivityRatings(prev => ({
+      ...prev,
+      [activityId]: ratings
+    }));
+  };
+
   if (!trip) {
     return (
       <div style={{ padding: '2rem' }}>
@@ -274,7 +290,8 @@ const TripDetail = () => {
         ))}
       </div>
 
-      {/* Group Analysis Section - Add this before Trip Info */}
+      
+    {/* Group Analysis Section - Add this before Trip Info */}
 <div style={{ marginTop: '2rem', padding: '1rem', backgroundColor: '#f0f9ff', borderRadius: '0.5rem', border: '1px solid #0ea5e9' }}>
   <h3>📊 Group Analysis</h3>
   {(() => {
@@ -315,9 +332,9 @@ const TripDetail = () => {
           </div>
         )}
       </div>
-        );
-      })()}
-    </div>
+    );
+  })()}
+</div>
 
       {/* Placeholder sections for future features */}
       <div style={{ marginTop: '2rem', padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '0.5rem' }}>
