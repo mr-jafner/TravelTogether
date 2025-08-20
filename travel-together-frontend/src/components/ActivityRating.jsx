@@ -26,107 +26,175 @@ const ActivityRating = ({ activity, participants, onRatingChange }) => {
   const mustDoCount = ratingValues.filter(rating => rating === 5).length;
   const wontDoCount = ratingValues.filter(rating => rating === 0).length;
 
-  // Rating labels and colors
+  // Enhanced rating configuration with Tailwind colors
   const ratingConfig = {
-    0: { label: "Won't do", color: "#ef4444", bgColor: "#fef2f2" },
-    1: { label: "Don't want", color: "#f97316", bgColor: "#fff7ed" },
-    2: { label: "Indifferent", color: "#6b7280", bgColor: "#f9fafb" },
-    3: { label: "Interested", color: "#3b82f6", bgColor: "#eff6ff" },
-    4: { label: "Really want", color: "#10b981", bgColor: "#f0fdf4" },
-    5: { label: "Must do", color: "#8b5cf6", bgColor: "#faf5ff" }
+    0: { 
+      label: "Won't do", 
+      bgColor: "bg-red-50", 
+      borderColor: "border-red-200",
+      textColor: "text-red-700",
+      buttonActive: "bg-red-500 border-red-500 text-white",
+      buttonInactive: "border-red-300 text-red-600 hover:bg-red-50"
+    },
+    1: { 
+      label: "Don't want", 
+      bgColor: "bg-orange-50", 
+      borderColor: "border-orange-200",
+      textColor: "text-orange-700",
+      buttonActive: "bg-orange-500 border-orange-500 text-white",
+      buttonInactive: "border-orange-300 text-orange-600 hover:bg-orange-50"
+    },
+    2: { 
+      label: "Indifferent", 
+      bgColor: "bg-gray-50", 
+      borderColor: "border-gray-200",
+      textColor: "text-gray-700",
+      buttonActive: "bg-gray-500 border-gray-500 text-white",
+      buttonInactive: "border-gray-300 text-gray-600 hover:bg-gray-50"
+    },
+    3: { 
+      label: "Interested", 
+      bgColor: "bg-blue-50", 
+      borderColor: "border-blue-200",
+      textColor: "text-blue-700",
+      buttonActive: "bg-blue-500 border-blue-500 text-white",
+      buttonInactive: "border-blue-300 text-blue-600 hover:bg-blue-50"
+    },
+    4: { 
+      label: "Really want", 
+      bgColor: "bg-green-50", 
+      borderColor: "border-green-200",
+      textColor: "text-green-700",
+      buttonActive: "bg-green-500 border-green-500 text-white",
+      buttonInactive: "border-green-300 text-green-600 hover:bg-green-50"
+    },
+    5: { 
+      label: "Must do", 
+      bgColor: "bg-purple-50", 
+      borderColor: "border-purple-200",
+      textColor: "text-purple-700",
+      buttonActive: "bg-purple-500 border-purple-500 text-white",
+      buttonInactive: "border-purple-300 text-purple-600 hover:bg-purple-50"
+    }
   };
 
+  const currentConfig = ratingConfig[Math.round(averageRating)];
+
   return (
-    <div style={{ 
-      border: '1px solid #e5e7eb', 
-      borderRadius: '0.5rem', 
-      padding: '1rem', 
-      marginBottom: '1rem',
-      backgroundColor: ratingConfig[Math.round(averageRating)].bgColor
-    }}>
+    <div className={`border rounded-lg p-6 mb-4 transition-all duration-300 hover:shadow-md ${currentConfig.bgColor} ${currentConfig.borderColor}`}>
       {/* Activity Header */}
-      <div style={{ marginBottom: '1rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '1.1rem', fontWeight: 'bold' }}>
+      <div className="mb-4">
+        <div className="flex justify-between items-start">
+          <div className="flex-1">
+            <h4 className="text-xl font-bold text-gray-900 mb-2">
               {activity.name}
             </h4>
-            <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
-              <span style={{ 
-                backgroundColor: '#e5e7eb', 
-                padding: '0.25rem 0.5rem', 
-                borderRadius: '0.25rem',
-                marginRight: '0.5rem'
-              }}>
+            <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
+              <span className="bg-gray-100 px-3 py-1 rounded-full text-gray-700 font-medium">
                 {activity.category}
               </span>
-              💰 ${activity.cost} • ⏱️ {activity.duration} • 📍 {activity.location}
+              <span className="flex items-center">
+                💰 <span className="ml-1 font-semibold">${activity.cost}</span>
+              </span>
+              <span className="flex items-center">
+                ⏱️ <span className="ml-1">{activity.duration}</span>
+              </span>
+              <span className="flex items-center">
+                📍 <span className="ml-1">{activity.location}</span>
+              </span>
             </div>
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: ratingConfig[Math.round(averageRating)].color }}>
+          <div className="text-right ml-4">
+            <div className={`text-2xl font-bold ${currentConfig.textColor}`}>
               {averageRating.toFixed(1)}/5
             </div>
-            <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
+            <div className="text-sm text-gray-500">
               {interestedCount}/{participants.length} interested
             </div>
           </div>
         </div>
       </div>
 
-      {/* Group Summary */}
-      <div style={{ marginBottom: '1rem', fontSize: '0.875rem' }}>
-        {mustDoCount > 0 && <span style={{ color: '#8b5cf6', marginRight: '1rem' }}>🟣 {mustDoCount} must do</span>}
-        {interestedCount > mustDoCount && <span style={{ color: '#10b981', marginRight: '1rem' }}>🟢 {interestedCount - mustDoCount} interested</span>}
-        {wontDoCount > 0 && <span style={{ color: '#ef4444' }}>🔴 {wontDoCount} won't do</span>}
+      {/* Group Summary Badges */}
+      <div className="mb-4 flex flex-wrap gap-2">
+        {mustDoCount > 0 && (
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800">
+            <span className="w-2 h-2 bg-purple-500 rounded-full mr-2"></span>
+            {mustDoCount} must do
+          </span>
+        )}
+        {interestedCount > mustDoCount && (
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800">
+            <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+            {interestedCount - mustDoCount} interested
+          </span>
+        )}
+        {wontDoCount > 0 && (
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-red-100 text-red-800">
+            <span className="w-2 h-2 bg-red-500 rounded-full mr-2"></span>
+            {wontDoCount} won't do
+          </span>
+        )}
       </div>
 
       {/* Individual Ratings */}
       <div>
-        <div style={{ fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.5rem' }}>Individual Ratings:</div>
-        {participants.map(participant => (
-          <div key={participant} style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            marginBottom: '0.5rem',
-            padding: '0.5rem',
-            backgroundColor: 'rgba(255,255,255,0.7)',
-            borderRadius: '0.25rem'
-          }}>
-            <span style={{ fontSize: '0.875rem', fontWeight: '500' }}>{participant}</span>
-            <div style={{ display: 'flex', gap: '0.25rem' }}>
-              {[0, 1, 2, 3, 4, 5].map(rating => (
-                <button
-                  key={rating}
-                  onClick={() => handleRatingClick(participant, rating)}
-                  style={{
-                    width: '30px',
-                    height: '24px',
-                    fontSize: '0.75rem',
-                    border: `2px solid ${ratings[participant] === rating ? ratingConfig[rating].color : '#d1d5db'}`,
-                    backgroundColor: ratings[participant] === rating ? ratingConfig[rating].color : 'white',
-                    color: ratings[participant] === rating ? 'white' : '#374151',
-                    borderRadius: '0.25rem',
-                    cursor: 'pointer',
-                    fontWeight: '600'
-                  }}
-                  title={ratingConfig[rating].label}
-                >
-                  {rating}
-                </button>
-              ))}
-              <span style={{ 
-                marginLeft: '0.5rem', 
-                fontSize: '0.75rem', 
-                color: ratingConfig[ratings[participant]].color,
-                fontWeight: '600'
-              }}>
-                {ratingConfig[ratings[participant]].label}
-              </span>
-            </div>
-          </div>
-        ))}
+        <div className="text-sm font-semibold text-gray-700 mb-3">Individual Ratings:</div>
+        <div className="space-y-3">
+          {participants.map(participant => {
+            const participantRating = ratings[participant];
+            const participantConfig = ratingConfig[participantRating];
+            
+            return (
+              <div key={participant} className="flex items-center justify-between p-3 bg-white bg-opacity-70 rounded-lg backdrop-blur-sm">
+                <span className="text-sm font-medium text-gray-900 min-w-0 flex-1">
+                  {participant}
+                </span>
+                <div className="flex items-center gap-1 ml-4">
+                  {[0, 1, 2, 3, 4, 5].map(rating => {
+                    const config = ratingConfig[rating];
+                    const isActive = participantRating === rating;
+                    
+                    return (
+                      <button
+                        key={rating}
+                        onClick={() => handleRatingClick(participant, rating)}
+                        className={`
+                          w-8 h-8 text-xs border-2 rounded-md font-bold
+                          transition-all duration-200 ease-in-out
+                          transform hover:scale-110 active:scale-95
+                          ${isActive 
+                            ? config.buttonActive + ' shadow-md' 
+                            : 'bg-white ' + config.buttonInactive
+                          }
+                        `}
+                        title={config.label}
+                      >
+                        {rating}
+                      </button>
+                    );
+                  })}
+                  <span className={`ml-3 text-xs font-semibold ${participantConfig.textColor}`}>
+                    {participantConfig.label}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Rating Scale Legend */}
+      <div className="mt-4 pt-4 border-t border-gray-200">
+        <div className="text-xs text-gray-500 text-center">
+          <span className="font-medium">Rating Scale:</span> 
+          <span className="mx-1">0=Won't do</span> • 
+          <span className="mx-1">1=Don't want</span> • 
+          <span className="mx-1">2=Indifferent</span> • 
+          <span className="mx-1">3=Interested</span> • 
+          <span className="mx-1">4=Really want</span> • 
+          <span className="mx-1">5=Must do</span>
+        </div>
       </div>
     </div>
   );

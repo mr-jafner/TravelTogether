@@ -1,14 +1,11 @@
 import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import ActivityRating from './ActivityRating'; // Add this import
+import ActivityRating from './ActivityRating';
 
 const TripDetail = () => {
   const { tripId } = useParams();
-
-  // Add state to track all activity ratings
-
   
-  // Same exact data structure as your TripList
+  // Your existing sampleTrips data stays exactly the same...
   const sampleTrips = [
     {
       id: 1,
@@ -226,14 +223,14 @@ const TripDetail = () => {
 
   const trip = sampleTrips.find(t => t.id === parseInt(tripId));
 
-   const [activityRatings, setActivityRatings] = useState(() => {
+  // Initialize state AFTER trip is found
+  const [activityRatings, setActivityRatings] = useState(() => {
     if (!trip) return {};
     
     const initialRatings = {};
     trip.activities.forEach(activity => {
       const participantRatings = {};
       trip.participants.forEach(participant => {
-        // Generate realistic sample ratings (0-5) for demo
         participantRatings[participant] = Math.floor(Math.random() * 6);
       });
       initialRatings[activity.id] = participantRatings;
@@ -250,97 +247,186 @@ const TripDetail = () => {
 
   if (!trip) {
     return (
-      <div style={{ padding: '2rem' }}>
-        <h2>Trip not found</h2>
-        <Link to="/trips">← Back to My Trips</Link>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-8">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Trip not found</h2>
+          <Link 
+            to="/trips" 
+            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            ← Back to My Trips
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: '2rem' }}>
-      <Link to="/trips" style={{ marginBottom: '1rem', display: 'inline-block' }}>← Back to My Trips</Link>
-      
-      <h1>{trip.name}</h1>
-      <h2>📍 {trip.destination}</h2>
-      <p><strong>Dates:</strong> {formatDate(trip.startDate)} - {formatDate(trip.endDate)}</p>
-      
-      <div style={{ marginTop: '2rem' }}>
-        <h3>👥 Participants ({trip.participants.length})</h3>
-        <ul style={{ listStyle: 'none', padding: 0 }}>
-          {trip.participants.map((participant, index) => (
-            <li key={index}>{participant}</li>
-          ))}
-        </ul>
-      </div>
-      
-      <div style={{ marginTop: '2rem' }}>
-        <h3>🎯 Activities ({trip.activities.length}) - Rate 0-5</h3>
-        <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '1rem' }}>
-          <strong>Rating Scale:</strong> 0=Won't do • 1=Don't want • 2=Indifferent • 3=Interested • 4=Really want • 5=Must do
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto p-6 sm:p-8">
+        {/* Back Navigation */}
+        <Link 
+          to="/trips" 
+          className="inline-flex items-center text-blue-600 hover:text-blue-800 mb-6 transition-colors group"
+        >
+          <svg className="w-4 h-4 mr-2 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to My Trips
+        </Link>
+        
+        {/* Trip Header */}
+        <div className="bg-white rounded-xl shadow-sm p-8 mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+            {trip.name}
+          </h1>
+          <div className="flex items-center text-lg text-gray-600 mb-4">
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            {trip.destination}
+          </div>
+          <div className="flex items-center text-gray-600">
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span className="font-medium">{formatDate(trip.startDate)} - {formatDate(trip.endDate)}</span>
+          </div>
         </div>
         
-        {trip.activities.map(activity => (
-          <ActivityRating
-            key={activity.id}
-            activity={activity}
-            participants={trip.participants}
-            onRatingChange={handleActivityRatingChange}
-          />
-        ))}
-      </div>
-
-      
-    {/* Group Analysis Section - Add this before Trip Info */}
-<div style={{ marginTop: '2rem', padding: '1rem', backgroundColor: '#f0f9ff', borderRadius: '0.5rem', border: '1px solid #0ea5e9' }}>
-  <h3>📊 Group Analysis</h3>
-  {(() => {
-    // Calculate consensus data
-    const consensusData = trip.activities.map(activity => {
-      const ratings = activityRatings[activity.id] || {};
-      const values = Object.values(ratings);
-      const avg = values.length ? values.reduce((sum, r) => sum + r, 0) / values.length : 2.5;
-      const interested = values.filter(r => r >= 3).length;
-      const mustDo = values.filter(r => r === 5).length;
-      return { ...activity, avg, interested, mustDo, total: trip.participants.length };
-    }).sort((a, b) => b.avg - a.avg);
-
-    const strongConsensus = consensusData.filter(a => a.avg >= 4);
-    const divisive = consensusData.filter(a => a.interested > 0 && a.interested < a.total * 0.6);
-
-    return (
-      <div>
-        {strongConsensus.length > 0 && (
-          <div style={{ marginBottom: '1rem' }}>
-            <h4 style={{ color: '#059669', margin: '0 0 0.5rem 0' }}>🟢 Strong Group Consensus</h4>
-            {strongConsensus.map(activity => (
-              <div key={activity.id} style={{ fontSize: '0.875rem', marginLeft: '1rem' }}>
-                • <strong>{activity.name}</strong> ({activity.avg.toFixed(1)}/5 avg, {activity.interested}/{activity.total} interested)
+        {/* Participants Section */}
+        <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
+          <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+            <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            Participants ({trip.participants.length})
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {trip.participants.map((participant, index) => (
+              <div key={index} className="flex items-center p-3 bg-gray-50 rounded-lg">
+                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium text-sm mr-3">
+                  {participant.split(' ').map(n => n[0]).join('')}
+                </div>
+                <span className="text-gray-900 font-medium">{participant}</span>
               </div>
             ))}
           </div>
-        )}
+        </div>
         
-        {divisive.length > 0 && (
-          <div>
-            <h4 style={{ color: '#dc2626', margin: '0 0 0.5rem 0' }}>🟡 Mixed Opinions</h4>
-            {divisive.map(activity => (
-              <div key={activity.id} style={{ fontSize: '0.875rem', marginLeft: '1rem' }}>
-                • <strong>{activity.name}</strong> ({activity.interested}/{activity.total} interested - consider subgroups)
-              </div>
-            ))}
+        {/* Activities Section */}
+        <div className="mb-8">
+          <h3 className="text-2xl font-bold text-gray-900 mb-2 flex items-center">
+            <svg className="w-7 h-7 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+            </svg>
+            Activities ({trip.activities.length}) - Rate 0-5
+          </h3>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <p className="text-sm text-blue-800">
+              <strong>How it works:</strong> Rate each activity from 0-5 based on your interest level. 
+              The system automatically calculates group consensus and highlights popular activities vs. those that might work better for subgroups.
+            </p>
           </div>
-        )}
-      </div>
-    );
-  })()}
-</div>
+          
+          {trip.activities.map(activity => (
+            <ActivityRating
+              key={activity.id}
+              activity={activity}
+              participants={trip.participants}
+              onRatingChange={handleActivityRatingChange}
+            />
+          ))}
+        </div>
 
-      {/* Placeholder sections for future features */}
-      <div style={{ marginTop: '2rem', padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '0.5rem' }}>
-        <h3>📋 Trip Info</h3>
-        <p>Trip logistics panel coming soon...</p>
-        <p><em>This will include: Wi-Fi passwords, room numbers, flight details, important notes, etc.</em></p>
+        {/* Group Analysis Section */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6 mb-8">
+          <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+            <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            Group Analysis
+          </h3>
+          {(() => {
+            // Calculate consensus data
+            const consensusData = trip.activities.map(activity => {
+              const ratings = activityRatings[activity.id] || {};
+              const values = Object.values(ratings);
+              const avg = values.length ? values.reduce((sum, r) => sum + r, 0) / values.length : 2.5;
+              const interested = values.filter(r => r >= 3).length;
+              const mustDo = values.filter(r => r === 5).length;
+              return { ...activity, avg, interested, mustDo, total: trip.participants.length };
+            }).sort((a, b) => b.avg - a.avg);
+
+            const strongConsensus = consensusData.filter(a => a.avg >= 4);
+            const divisive = consensusData.filter(a => a.interested > 0 && a.interested < a.total * 0.6);
+
+            return (
+              <div className="space-y-4">
+                {strongConsensus.length > 0 && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <h4 className="font-bold text-green-800 mb-3 flex items-center">
+                      <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+                      Strong Group Consensus
+                    </h4>
+                    <div className="space-y-2">
+                      {strongConsensus.map(activity => (
+                        <div key={activity.id} className="text-sm text-green-700 flex justify-between">
+                          <span className="font-medium">{activity.name}</span>
+                          <span className="text-green-600">
+                            {activity.avg.toFixed(1)}/5 avg • {activity.interested}/{activity.total} interested
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {divisive.length > 0 && (
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <h4 className="font-bold text-yellow-800 mb-3 flex items-center">
+                      <span className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></span>
+                      Mixed Opinions - Consider Subgroups
+                    </h4>
+                    <div className="space-y-2">
+                      {divisive.map(activity => (
+                        <div key={activity.id} className="text-sm text-yellow-700 flex justify-between">
+                          <span className="font-medium">{activity.name}</span>
+                          <span className="text-yellow-600">
+                            {activity.interested}/{activity.total} interested
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {strongConsensus.length === 0 && divisive.length === 0 && (
+                  <div className="text-center text-gray-500 py-4">
+                    <p>Start rating activities to see group analysis!</p>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+        </div>
+
+        {/* Trip Info Section */}
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
+            <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Trip Information
+          </h3>
+          <div className="bg-gray-50 rounded-lg p-4">
+            <p className="text-gray-600 mb-2">Trip logistics panel coming soon...</p>
+            <p className="text-sm text-gray-500">
+              <em>This will include: Wi-Fi passwords, room numbers, flight details, important notes, and more.</em>
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
