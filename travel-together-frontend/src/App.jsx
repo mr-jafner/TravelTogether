@@ -68,8 +68,16 @@ function App() {
           <Route path="/feed" element={<Feed />} />
           {/* Add more routes as you build components */}
         </Routes>
+        
+        <div className="bg-blue-500 text-white p-4">
+      <h1 className="text-2xl font-bold">TravelTogether ✈️</h1>
+      <p className="mt-2">Tailwind should be working now!</p>
+    </div>
+
       </main>
     </BrowserRouter>
+
+    
   );
 }
 
