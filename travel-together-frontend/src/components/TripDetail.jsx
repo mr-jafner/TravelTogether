@@ -3,6 +3,16 @@ import { useParams, Link } from 'react-router-dom';
 
 const TripDetail = () => {
   const { tripId } = useParams();
+
+  // Add state to track all activity ratings
+  const [activityRatings, setActivityRatings] = useState({});
+
+  const handleActivityRatingChange = (activityId, ratings) => {
+    setActivityRatings(prev => ({
+      ...prev,
+      [activityId]: ratings
+    }));
+  };
   
   // Same exact data structure as your TripList
   const sampleTrips = [
@@ -249,17 +259,65 @@ const TripDetail = () => {
       </div>
       
       <div style={{ marginTop: '2rem' }}>
-        <h3>🎯 Activities ({trip.activities.length})</h3>
-        <ul style={{ listStyle: 'none', padding: 0 }}>
-          {trip.activities.map(activity => (
-            <li key={activity.id} style={{ marginBottom: '1rem', padding: '1rem', border: '1px solid #ddd', borderRadius: '0.5rem' }}>
-              <div><strong>{activity.name}</strong> <span style={{ backgroundColor: '#e5e7eb', padding: '0.25rem 0.5rem', borderRadius: '0.25rem', fontSize: '0.875rem' }}>{activity.category}</span></div>
-              <div>💰 ${activity.cost} • ⏱️ {activity.duration} • 📍 {activity.location}</div>
-              <div>👍 {activity.votes} votes</div>
-            </li>
-          ))}
-        </ul>
+        <h3>🎯 Activities ({trip.activities.length}) - Rate 0-5</h3>
+        <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '1rem' }}>
+          <strong>Rating Scale:</strong> 0=Won't do • 1=Don't want • 2=Indifferent • 3=Interested • 4=Really want • 5=Must do
+        </div>
+        
+        {trip.activities.map(activity => (
+          <ActivityRating
+            key={activity.id}
+            activity={activity}
+            participants={trip.participants}
+            onRatingChange={handleActivityRatingChange}
+          />
+        ))}
       </div>
+
+      {/* Group Analysis Section - Add this before Trip Info */}
+<div style={{ marginTop: '2rem', padding: '1rem', backgroundColor: '#f0f9ff', borderRadius: '0.5rem', border: '1px solid #0ea5e9' }}>
+  <h3>📊 Group Analysis</h3>
+  {(() => {
+    // Calculate consensus data
+    const consensusData = trip.activities.map(activity => {
+      const ratings = activityRatings[activity.id] || {};
+      const values = Object.values(ratings);
+      const avg = values.length ? values.reduce((sum, r) => sum + r, 0) / values.length : 2.5;
+      const interested = values.filter(r => r >= 3).length;
+      const mustDo = values.filter(r => r === 5).length;
+      return { ...activity, avg, interested, mustDo, total: trip.participants.length };
+    }).sort((a, b) => b.avg - a.avg);
+
+    const strongConsensus = consensusData.filter(a => a.avg >= 4);
+    const divisive = consensusData.filter(a => a.interested > 0 && a.interested < a.total * 0.6);
+
+    return (
+      <div>
+        {strongConsensus.length > 0 && (
+          <div style={{ marginBottom: '1rem' }}>
+            <h4 style={{ color: '#059669', margin: '0 0 0.5rem 0' }}>🟢 Strong Group Consensus</h4>
+            {strongConsensus.map(activity => (
+              <div key={activity.id} style={{ fontSize: '0.875rem', marginLeft: '1rem' }}>
+                • <strong>{activity.name}</strong> ({activity.avg.toFixed(1)}/5 avg, {activity.interested}/{activity.total} interested)
+              </div>
+            ))}
+          </div>
+        )}
+        
+        {divisive.length > 0 && (
+          <div>
+            <h4 style={{ color: '#dc2626', margin: '0 0 0.5rem 0' }}>🟡 Mixed Opinions</h4>
+            {divisive.map(activity => (
+              <div key={activity.id} style={{ fontSize: '0.875rem', marginLeft: '1rem' }}>
+                • <strong>{activity.name}</strong> ({activity.interested}/{activity.total} interested - consider subgroups)
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+        );
+      })()}
+    </div>
 
       {/* Placeholder sections for future features */}
       <div style={{ marginTop: '2rem', padding: '1rem', backgroundColor: '#f9f9f9', borderRadius: '0.5rem' }}>
