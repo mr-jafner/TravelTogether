@@ -58,7 +58,7 @@ function Feed() {
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter  basename="/traveltogether">
       <Header />
       <main>
         <Routes>
