@@ -1,7 +1,15 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
 const TripList = () => {
+  const [userTrips, setUserTrips] = useState([]);
+
+  // Load user trips from localStorage on component mount
+  useEffect(() => {
+    const savedTrips = JSON.parse(localStorage.getItem('userTrips') || '[]');
+    setUserTrips(savedTrips);
+  }, []);
+
   // Sample trip data - realistic scenarios for development/testing
   const sampleTrips = [
     {
@@ -218,9 +226,74 @@ const TripList = () => {
     });
   };
 
+  // Combine user trips and sample trips
+  const allTrips = [...userTrips, ...sampleTrips];
+
   return (
     <div>
-      <h2>My Trips</h2>
+      {userTrips.length > 0 && (
+        <>
+          <h2 style={{ color: '#f97316', marginBottom: '1rem' }}>Your Created Trips</h2>
+          <ul style={{listStyle: 'none', padding: 0, marginBottom: '2rem'}}>
+            {userTrips.map(trip => (
+              <li key={trip.id}>
+                <Link 
+                  to={`/trips/${trip.id}`} 
+                  style={{ 
+                    textDecoration: 'none', 
+                    color: 'inherit',
+                    display: 'block',
+                    padding: '1rem',
+                    border: '2px solid #f97316',
+                    borderRadius: '0.5rem',
+                    marginBottom: '1rem',
+                    background: 'linear-gradient(135deg, rgba(249, 115, 22, 0.1), rgba(249, 115, 22, 0.05))',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = 'linear-gradient(135deg, rgba(249, 115, 22, 0.2), rgba(249, 115, 22, 0.1))';
+                    e.target.style.transform = 'translateY(-2px)';
+                    e.target.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.15)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = 'linear-gradient(135deg, rgba(249, 115, 22, 0.1), rgba(249, 115, 22, 0.05))';
+                    e.target.style.transform = 'translateY(0)';
+                    e.target.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
+                  }}
+                >
+                  <div>
+                    <strong>{trip.name}</strong>
+                    <span style={{ 
+                      marginLeft: '0.5rem', 
+                      fontSize: '0.75rem', 
+                      backgroundColor: '#f97316', 
+                      color: 'white', 
+                      padding: '0.25rem 0.5rem', 
+                      borderRadius: '1rem' 
+                    }}>
+                      YOUR TRIP
+                    </span>
+                  </div>
+                  <div>Destination: {trip.destination}</div>
+                  <div>
+                    Dates: {formatDate(trip.startDate)} - {formatDate(trip.endDate)}
+                  </div>
+                  <div>
+                    Participants ({trip.participants.length}): {trip.participants.join(', ')}
+                  </div>
+                  <div>
+                    <strong>Ready to plan activities and restaurants!</strong>
+                  </div> 
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      
+      <h2>Sample Trips</h2>
       <ul style={{listStyle: 'none',padding:0}}>
         {sampleTrips.map(trip => (
           <li key={trip.id}>
@@ -231,14 +304,24 @@ const TripList = () => {
                 color: 'inherit',
                 display: 'block',
                 padding: '1rem',
-                border: '1px solid #ccc',
+                border: '1px solid rgba(23, 162, 184, 0.3)',
                 borderRadius: '0.5rem',
                 marginBottom: '1rem',
-                backgroundColor: '#f9f9f9',
-                cursor: 'pointer'
+                background: 'linear-gradient(135deg, rgba(23, 162, 184, 0.1), rgba(253, 126, 20, 0.1))',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
               }}
-              onMouseEnter={(e) => e.target.style.backgroundColor = '#f0f0f0'}
-              onMouseLeave={(e) => e.target.style.backgroundColor = '#f9f9f9'}
+              onMouseEnter={(e) => {
+                e.target.style.background = 'linear-gradient(135deg, rgba(23, 162, 184, 0.2), rgba(253, 126, 20, 0.2))';
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.15)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = 'linear-gradient(135deg, rgba(23, 162, 184, 0.1), rgba(253, 126, 20, 0.1))';
+                e.target.style.transform = 'translateY(0)';
+                e.target.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
+              }}
             >
              <div>
                 <strong>{trip.name}</strong>

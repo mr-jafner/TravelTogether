@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
+import ttLogo from './assets/TT_logo_nobg.png'
 import './App.css'
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
 import Header from './components/Header';
 import TripList from './components/TripList'
 import TripDetail from './components/TripDetail';
+import TripCreation from './components/TripCreation';
 
 // Temporary placeholder components (you'll build these later)
 function Dashboard() {
@@ -19,15 +21,35 @@ function Dashboard() {
 }
 
 function MyTrips() {
+  const navigate = useNavigate();
+
+  const handleCreateTrip = () => {
+    navigate('/trips/create');
+  };
+
   return (
     <div style={{ padding: '2rem' }}>
-        <button style={{ 
-        backgroundColor: '#2563eb', 
+        <button 
+        onClick={handleCreateTrip}
+        style={{ 
+        backgroundColor: '#f97316', 
         color: 'white', 
         padding: '0.5rem 1rem', 
         border: 'none', 
         borderRadius: '0.375rem',
-        cursor: 'pointer'
+        cursor: 'pointer',
+        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+        transition: 'all 0.2s ease'
+      }}
+      onMouseEnter={(e) => {
+        e.target.style.backgroundColor = '#ea580c';
+        e.target.style.transform = 'translateY(-1px)';
+        e.target.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.15)';
+      }}
+      onMouseLeave={(e) => {
+        e.target.style.backgroundColor = '#f97316';
+        e.target.style.transform = 'translateY(0)';
+        e.target.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
       }}>
         + Create New Trip
       </button>
@@ -56,6 +78,39 @@ function Feed() {
   );
 }
 
+function WelcomeSection() {
+  const navigate = useNavigate();
+
+  const handleCreateFirstTrip = () => {
+    navigate('/trips/create');
+  };
+
+  return (
+    <div className="bg-gradient-to-br from-cyan-400 via-teal-400 to-orange-400 py-12 flex items-center justify-center">
+      <div className="bg-white rounded-lg shadow-xl p-6 max-w-sm text-center">
+        <img 
+          src={ttLogo} 
+          alt="TravelTogether Logo" 
+          className="logo travel mx-auto mb-4" 
+          style={{ height: '3em' }}
+        />
+        <h1 className="text-2xl font-bold text-gray-800 mb-3">
+          TravelTogether
+        </h1>
+        <p className="text-gray-600 mb-4 text-sm">
+          Ready to build amazing travel experiences together. Start planning your next adventure!
+        </p>
+        <button 
+          onClick={handleCreateFirstTrip}
+          className="bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 px-4 rounded-lg transition-all duration-200 transform hover:-translate-y-1 hover:shadow-lg"
+        >
+          Create Your First Trip
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function App() {
   return (
     <BrowserRouter  basename="/traveltogether">
@@ -64,24 +119,13 @@ function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/trips" element={<MyTrips />} />
+          <Route path="/trips/create" element={<TripCreation />} />
           <Route path="/trips/:tripId" element={<TripDetail />} />
           <Route path="/feed" element={<Feed />} />
           {/* Add more routes as you build components */}
         </Routes>
         
-    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-      <div className="bg-white rounded-lg shadow-xl p-8 max-w-md">
-        <h1 className="text-3xl font-bold text-gray-800 mb-4">
-          TravelTogether ✈️
-        </h1>
-        <p className="text-gray-600 mb-6">
-          Tailwind CSS is working! Ready to build amazing travel experiences.
-        </p>
-        <button className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors">
-          Create Your First Trip
-        </button>
-      </div>
-    </div>
+        <WelcomeSection />
       </main>
     </BrowserRouter>
 

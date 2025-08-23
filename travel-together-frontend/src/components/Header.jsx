@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import './Header.css';
+import ttLogo from '../assets/TT_logo_nobg.png';
 
 function Header() {
   // State for mobile menu toggle (for future implementation)
@@ -21,9 +22,11 @@ function Header() {
           {/* Brand/Logo Section */}
           <div className="brand-section">
             <Link to="/" className="brand-link">
-              <div className="brand-icon">
-                <span className="brand-icon-text">TT</span>
-              </div>
+              <img 
+                src={ttLogo} 
+                alt="TravelTogether Logo" 
+                className="brand-logo"
+              />
               <span className="brand-text brand-text-full">TravelTogether</span>
               <span className="brand-text brand-text-short">TT</span>
             </Link>

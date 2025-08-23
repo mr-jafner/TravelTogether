@@ -87,7 +87,7 @@ body {
 }
 
 .btn {
-  background: #3b82f6;
+  background: #f97316;
   color: white;
   padding: 0.75rem 1.5rem;
   border: none;
@@ -97,7 +97,7 @@ body {
 }
 
 .btn:hover {
-  background: #2563eb;
+  background: #ea580c;
 }*/
 @tailwind base;
 @tailwind components;
@@ -111,7 +111,7 @@ body {
 }
 
 .btn {
-  background: #3b82f6;
+  background: #f97316;
   color: white;
   padding: 0.75rem 1.5rem;
   border: none;
@@ -121,5 +121,5 @@ body {
 }
 
 .btn:hover {
-  background: #2563eb;
+  background: #ea580c;
 }
