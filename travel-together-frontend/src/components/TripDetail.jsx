@@ -1,410 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import ActivityRating from './ActivityRating';
 import RestaurantRating from './RestaurantRating';
 import ActivityForm from './ActivityForm';
 import RestaurantForm from './RestaurantForm';
+import { tripApi, transformTripForFrontend } from '../services/api';
 
 const TripDetail = () => {
   const { tripId } = useParams();
   const [showActivityForm, setShowActivityForm] = useState(false);
   const [showRestaurantForm, setShowRestaurantForm] = useState(false);
   const [currentTrip, setCurrentTrip] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
   
-  // Your existing sampleTrips data stays exactly the same...
-  const sampleTrips = [
-    {
-      id: 1,
-      name: "Summer Family Vacation",
-      destination: "Orlando, Florida",
-      startDate: "2025-07-15",
-      endDate: "2025-07-22",
-      participants: ["Sarah Johnson", "Mike Johnson", "Emma Johnson", "Lucas Johnson"],
-      currentUser: "Sarah Johnson",
-      restaurants: [
-        {
-          id: 151,
-          name: "Chef Mickey's",
-          cuisine: "American",
-          location: "Disney's Contemporary Resort",
-          cost: 62,
-          priceRange: "$$$",
-          dietaryOptions: ["vegetarian", "kids-friendly"],
-          groupCapacity: 8,
-          votes: 4
-        },
-        {
-          id: 152,
-          name: "Ohana",
-          cuisine: "Polynesian",
-          location: "Disney's Polynesian Village Resort",
-          cost: 65,
-          priceRange: "$$$",
-          dietaryOptions: ["gluten-free", "kids-friendly"],
-          groupCapacity: 10,
-          votes: 3
-        },
-        {
-          id: 153,
-          name: "Homecoming Kitchen",
-          cuisine: "Southern",
-          location: "Disney Springs",
-          cost: 45,
-          priceRange: "$$",
-          dietaryOptions: ["vegetarian", "gluten-free"],
-          groupCapacity: 6,
-          votes: 2
-        },
-        {
-          id: 154,
-          name: "Cosmic Ray's Starlight Cafe",
-          cuisine: "Fast Food",
-          location: "Magic Kingdom",
-          cost: 18,
-          priceRange: "$",
-          dietaryOptions: ["vegetarian", "kids-friendly"],
-          groupCapacity: 12,
-          votes: 4
-        }
-      ],
-      activities: [
-        {
-          id: 101,
-          name: "Magic Kingdom",
-          category: "Entertainment",
-          location: "Bay Lake, FL",
-          cost: 109,
-          duration: "Full Day",
-          votes: 4
-        },
-        {
-          id: 102,
-          name: "Universal Studios",
-          category: "Entertainment", 
-          location: "Orlando, FL",
-          cost: 115,
-          duration: "Full Day",
-          votes: 3
-        },
-        {
-          id: 103,
-          name: "Disney's Blizzard Beach",
-          category: "Recreation",
-          location: "Orlando, FL", 
-          cost: 75,
-          duration: "Half Day",
-          votes: 4
-        },
-        {
-          id: 104,
-          name: "Character Breakfast at Chef Mickey's",
-          category: "Dining",
-          location: "Orlando, FL",
-          cost: 62,
-          duration: "2 hours",
-          votes: 2
-        }
-      ]
-    },
-    {
-      id: 2,
-      name: "Bachelor Party Weekend",
-      destination: "Las Vegas, Nevada",
-      startDate: "2025-09-12",
-      endDate: "2025-09-14",
-      participants: ["Alex Chen", "David Martinez", "Ryan Thompson", "Kevin Park", "Jordan Williams"],
-      currentUser: "Alex Chen",
-      restaurants: [
-        {
-          id: 251,
-          name: "Gordon Ramsay Hell's Kitchen",
-          cuisine: "Fine Dining",
-          location: "Caesars Palace",
-          cost: 120,
-          priceRange: "$$$$",
-          dietaryOptions: ["gluten-free"],
-          groupCapacity: 8,
-          votes: 5
-        },
-        {
-          id: 252,
-          name: "The Buffet at Wynn",
-          cuisine: "International",
-          location: "Wynn Las Vegas",
-          cost: 89,
-          priceRange: "$$$",
-          dietaryOptions: ["vegetarian", "gluten-free", "vegan"],
-          groupCapacity: 15,
-          votes: 4
-        },
-        {
-          id: 253,
-          name: "Hash House A Go Go",
-          cuisine: "American",
-          location: "The LINQ",
-          cost: 35,
-          priceRange: "$$",
-          dietaryOptions: ["vegetarian"],
-          groupCapacity: 10,
-          votes: 3
-        },
-        {
-          id: 254,
-          name: "Yard House",
-          cuisine: "Sports Bar",
-          location: "The LINQ Promenade",
-          cost: 28,
-          priceRange: "$$",
-          dietaryOptions: ["vegetarian", "gluten-free"],
-          groupCapacity: 12,
-          votes: 4
-        }
-      ],
-      activities: [
-        {
-          id: 201,
-          name: "Cirque du Soleil Show",
-          category: "Entertainment",
-          location: "The Strip, Las Vegas",
-          cost: 89,
-          duration: "3 hours",
-          votes: 5
-        },
-        {
-          id: 202,
-          name: "High Roller Observation Wheel",
-          category: "Sightseeing",
-          location: "The LINQ, Las Vegas",
-          cost: 35,
-          duration: "1 hour",
-          votes: 4
-        },
-        {
-          id: 203,
-          name: "Pool Party at Marquee Dayclub",
-          category: "Entertainment",
-          location: "The Cosmopolitan, Las Vegas",
-          cost: 75,
-          duration: "4 hours", 
-          votes: 3
-        },
-        {
-          id: 204,
-          name: "Steakhouse Dinner",
-          category: "Dining",
-          location: "Gordon Ramsay Hell's Kitchen",
-          cost: 150,
-          duration: "2 hours",
-          votes: 5
-        }
-      ]
-    },
-    {
-      id: 3,
-      name: "European Adventure",
-      destination: "Paris, France",
-      startDate: "2025-10-05",
-      endDate: "2025-10-18",
-      participants: ["Jessica Brown", "Amanda Davis"],
-      currentUser: "Jessica Brown",
-      restaurants: [
-        {
-          id: 351,
-          name: "Le Comptoir du Relais",
-          cuisine: "French Bistro",
-          location: "6th Arrondissement",
-          cost: 45,
-          priceRange: "$$",
-          dietaryOptions: ["vegetarian"],
-          groupCapacity: 4,
-          votes: 2
-        },
-        {
-          id: 352,
-          name: "L'Ambroisie",
-          cuisine: "Fine Dining",
-          location: "Place des Vosges",
-          cost: 180,
-          priceRange: "$$$$",
-          dietaryOptions: ["vegetarian", "gluten-free"],
-          groupCapacity: 6,
-          votes: 1
-        },
-        {
-          id: 353,
-          name: "Café de Flore",
-          cuisine: "Café",
-          location: "Saint-Germain-des-Prés",
-          cost: 25,
-          priceRange: "$",
-          dietaryOptions: ["vegetarian", "vegan"],
-          groupCapacity: 8,
-          votes: 2
-        },
-        {
-          id: 354,
-          name: "Le Train Bleu",
-          cuisine: "Brasserie",
-          location: "Gare de Lyon",
-          cost: 65,
-          priceRange: "$$$",
-          dietaryOptions: ["vegetarian", "gluten-free"],
-          groupCapacity: 6,
-          votes: 2
-        }
-      ],
-      activities: [
-        {
-          id: 301,
-          name: "Eiffel Tower Visit",
-          category: "Sightseeing",
-          location: "Champ de Mars, Paris",
-          cost: 29,
-          duration: "3 hours",
-          votes: 2
-        },
-        {
-          id: 302,
-          name: "Louvre Museum",
-          category: "Culture",
-          location: "1st Arrondissement, Paris",
-          cost: 22,
-          duration: "4 hours",
-          votes: 2
-        },
-        {
-          id: 303,
-          name: "Seine River Cruise",
-          category: "Sightseeing",
-          location: "Seine River, Paris",
-          cost: 15,
-          duration: "1.5 hours",
-          votes: 2
-        },
-        {
-          id: 304,
-          name: "Wine Tasting in Montmartre",
-          category: "Dining",
-          location: "Montmartre, Paris",
-          cost: 65,
-          duration: "2 hours",
-          votes: 1
-        },
-        {
-          id: 305,
-          name: "Day Trip to Versailles",
-          category: "Culture",
-          location: "Versailles, France",
-          cost: 35,
-          duration: "Full Day",
-          votes: 1
-        }
-      ]
-    },
-    {
-      id: 4,
-      name: "Company Retreat",
-      destination: "Aspen, Colorado",
-      startDate: "2025-11-08",
-      endDate: "2025-11-10",
-      participants: ["Jennifer Lee", "Mark Wilson", "Lisa Garcia", "Tom Anderson", "Rachel Kim", "Steve Miller", "Monica Rodriguez", "Chris Taylor"],
-      currentUser: "Jennifer Lee",
-      restaurants: [
-        {
-          id: 451,
-          name: "The Little Nell",
-          cuisine: "Fine Dining",
-          location: "Aspen, CO",
-          cost: 95,
-          priceRange: "$$$$",
-          dietaryOptions: ["vegetarian", "gluten-free", "vegan"],
-          groupCapacity: 12,
-          votes: 7
-        },
-        {
-          id: 452,
-          name: "White House Tavern",
-          cuisine: "American",
-          location: "Aspen, CO",
-          cost: 45,
-          priceRange: "$$",
-          dietaryOptions: ["vegetarian", "gluten-free"],
-          groupCapacity: 15,
-          votes: 6
-        },
-        {
-          id: 453,
-          name: "Ajax Tavern",
-          cuisine: "Alpine",
-          location: "Little Nell Hotel",
-          cost: 65,
-          priceRange: "$$$",
-          dietaryOptions: ["vegetarian"],
-          groupCapacity: 10,
-          votes: 8
-        },
-        {
-          id: 454,
-          name: "Grateful Deli",
-          cuisine: "Breakfast/Lunch",
-          location: "Aspen, CO",
-          cost: 22,
-          priceRange: "$",
-          dietaryOptions: ["vegetarian", "vegan", "gluten-free"],
-          groupCapacity: 20,
-          votes: 5
-        }
-      ],
-      activities: [
-        {
-          id: 401,
-          name: "Team Building Ropes Course",
-          category: "Team Building",
-          location: "Aspen Recreation Center",
-          cost: 45,
-          duration: "3 hours",
-          votes: 6
-        },
-        {
-          id: 402,
-          name: "Scenic Gondola Ride",
-          category: "Sightseeing",
-          location: "Aspen Mountain",
-          cost: 32,
-          duration: "2 hours",
-          votes: 8
-        },
-        {
-          id: 403,
-          name: "Group Dinner at The Little Nell",
-          category: "Dining",
-          location: "Aspen, CO",
-          cost: 95,
-          duration: "2.5 hours",
-          votes: 7
-        },
-        {
-          id: 404,
-          name: "Morning Yoga Session",
-          category: "Wellness",
-          location: "Hotel Conference Room",
-          cost: 0,
-          duration: "1 hour",
-          votes: 4
-        },
-        {
-          id: 405,
-          name: "Strategic Planning Workshop",
-          category: "Business",
-          location: "Hotel Meeting Room",
-          cost: 0,
-          duration: "4 hours",
-          votes: 8
-        }
-      ]
+  // Fetch trip data from API
+  useEffect(() => {
+    const fetchTrip = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const tripData = await tripApi.getTripById(parseInt(tripId));
+        const transformedTrip = transformTripForFrontend(tripData);
+        setCurrentTrip(transformedTrip);
+      } catch (err) {
+        console.error('Failed to fetch trip:', err);
+        setError('Failed to load trip details. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (tripId) {
+      fetchTrip();
     }
-  ];
+  }, [tripId, refreshKey]);
 
   // Same formatDate function
   const formatDate = (dateString) => {
@@ -416,14 +47,6 @@ const TripDetail = () => {
     });
   };
 
-  // Check both user trips and sample trips - use state for dynamic updates
-  React.useEffect(() => {
-    const userTrips = JSON.parse(localStorage.getItem('userTrips') || '[]');
-    const allTrips = [...userTrips, ...sampleTrips];
-    const foundTrip = allTrips.find(t => t.id === parseInt(tripId));
-    setCurrentTrip(foundTrip);
-  }, [tripId, refreshKey]);
-  
   const trip = currentTrip;
 
   // Initialize state AFTER trip is found
@@ -537,6 +160,45 @@ const TripDetail = () => {
     setShowRestaurantForm(false);
   };
 
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-8">
+        <div className="text-center">
+          <div className="text-2xl font-bold text-gray-900 mb-4">Loading trip...</div>
+          <div className="text-gray-600">Please wait while we fetch your trip details.</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-8">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Error Loading Trip</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <div className="space-x-4">
+            <button 
+              onClick={() => setRefreshKey(prev => prev + 1)}
+              className="inline-flex items-center px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
+            >
+              Try Again
+            </button>
+            <Link 
+              to="/trips" 
+              className="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              ← Back to My Trips
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Trip not found state
   if (!trip) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-8">

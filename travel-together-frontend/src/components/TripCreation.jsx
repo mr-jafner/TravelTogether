@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { tripApi } from '../services/api';
 
 const TripCreation = () => {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ const TripCreation = () => {
   });
   const [newParticipant, setNewParticipant] = useState('');
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -77,29 +79,31 @@ const TripCreation = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
-      // Create new trip object
-      const newTrip = {
-        id: Date.now(), // Simple ID generation for demo
-        name: formData.name,
-        destination: formData.destination,
-        startDate: formData.startDate,
-        endDate: formData.endDate,
-        participants: formData.participants,
-        currentUser: 'You',
-        restaurants: [],
-        activities: []
-      };
+      setLoading(true);
+      try {
+        // Create trip data for API
+        const tripData = {
+          name: formData.name,
+          destinations: [formData.destination], // Convert to array for backend
+          startDate: formData.startDate,
+          endDate: formData.endDate,
+          participants: formData.participants
+        };
 
-      // Get existing trips from localStorage or use empty array
-      const existingTrips = JSON.parse(localStorage.getItem('userTrips') || '[]');
-      const updatedTrips = [...existingTrips, newTrip];
-      localStorage.setItem('userTrips', JSON.stringify(updatedTrips));
-
-      // Navigate to the new trip detail page
-      navigate(`/trips/${newTrip.id}`);
+        // Create trip via API
+        const createdTrip = await tripApi.createTrip(tripData);
+        
+        // Navigate to the new trip detail page
+        navigate(`/trips/${createdTrip.id}`);
+      } catch (error) {
+        console.error('Failed to create trip:', error);
+        setErrors({ submit: 'Failed to create trip. Please try again.' });
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -259,13 +263,25 @@ const TripCreation = () => {
             {errors.participants && <p className="text-red-600 text-sm mt-1">{errors.participants}</p>}
           </div>
 
+          {/* Submit Error Display */}
+          {errors.submit && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+              <p className="text-red-800 text-sm">{errors.submit}</p>
+            </div>
+          )}
+
           {/* Form Actions */}
           <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200">
             <button
               type="submit"
-              className="flex-1 sm:flex-none bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 transform hover:-translate-y-1 hover:shadow-lg"
+              disabled={loading}
+              className={`flex-1 sm:flex-none ${
+                loading 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : 'bg-orange-500 hover:bg-orange-600 transform hover:-translate-y-1 hover:shadow-lg'
+              } text-white font-medium py-3 px-6 rounded-lg transition-all duration-200`}
             >
-              Create Trip & Start Planning
+              {loading ? 'Creating Trip...' : 'Create Trip & Start Planning'}
             </button>
             <Link
               to="/trips"
