@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import { ratingApi } from '../services/api';
 
-const ActivityRating = ({ activity, participants, currentUser, onRatingChange }) => {
+const ActivityRating = ({ activity, participants, currentUser, onRatingChange, tripId }) => {
   // Initialize ratings state - each participant starts with rating 2 (indifferent)
   const [ratings, setRatings] = useState(() => {
     const initialRatings = {};
@@ -11,14 +12,24 @@ const ActivityRating = ({ activity, participants, currentUser, onRatingChange })
     return initialRatings;
   });
 
-  const handleRatingClick = (participant, rating) => {
+  const handleRatingClick = async (participant, rating) => {
     // Only allow editing current user's rating
     if (participant !== currentUser) return;
     
-    const newRatings = { ...ratings, [participant]: rating };
-    setRatings(newRatings);
-    if (onRatingChange) {
-      onRatingChange(activity.id, newRatings);
+    try {
+      // Update rating via API
+      if (tripId) {
+        await ratingApi.rateActivity(tripId, activity.id, participant, rating);
+      }
+      
+      const newRatings = { ...ratings, [participant]: rating };
+      setRatings(newRatings);
+      if (onRatingChange) {
+        onRatingChange(activity.id, newRatings);
+      }
+    } catch (error) {
+      console.error('Failed to update activity rating:', error);
+      // Could add user-facing error handling here
     }
   };
 

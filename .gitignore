@@ -77,5 +77,6 @@ coverage/
 tmp/
 temp/
 
-# Misc
+# Project documentation (personal notes for Claude Code sessions)
 ref/
+.claude/

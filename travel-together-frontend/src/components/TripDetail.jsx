@@ -294,6 +294,7 @@ const TripDetail = () => {
                   participants={trip.participants}
                   currentUser={trip.currentUser}
                   onRatingChange={handleActivityRatingChange}
+                  tripId={trip.id}
                 />
               ))}
             </>
@@ -341,6 +342,7 @@ const TripDetail = () => {
                   participants={trip.participants}
                   currentUser={trip.currentUser}
                   onRatingChange={handleRestaurantRatingChange}
+                  tripId={trip.id}
                 />
               ))}
             </>
