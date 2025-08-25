@@ -15,25 +15,26 @@ const TripDetail = () => {
   const [error, setError] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
   
+  // Fetch trip data function (reusable)
+  const fetchTripData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const tripData = await tripApi.getTripById(parseInt(tripId));
+      const transformedTrip = transformTripForFrontend(tripData);
+      setCurrentTrip(transformedTrip);
+    } catch (err) {
+      console.error('Failed to fetch trip:', err);
+      setError('Failed to load trip details. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Fetch trip data from API
   useEffect(() => {
-    const fetchTrip = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const tripData = await tripApi.getTripById(parseInt(tripId));
-        const transformedTrip = transformTripForFrontend(tripData);
-        setCurrentTrip(transformedTrip);
-      } catch (err) {
-        console.error('Failed to fetch trip:', err);
-        setError('Failed to load trip details. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     if (tripId) {
-      fetchTrip();
+      fetchTripData();
     }
   }, [tripId, refreshKey]);
 
@@ -92,72 +93,36 @@ const TripDetail = () => {
     }));
   };
 
-  const handleAddActivity = (newActivity) => {
-    // For user trips, save to localStorage and update state
-    if (parseInt(tripId) < 1000) {
-      const userTrips = JSON.parse(localStorage.getItem('userTrips') || '[]');
-      const updatedTrips = userTrips.map(trip => {
-        if (trip.id === parseInt(tripId)) {
-          return {
-            ...trip,
-            activities: [...(trip.activities || []), newActivity]
-          };
-        }
-        return trip;
-      });
-      localStorage.setItem('userTrips', JSON.stringify(updatedTrips));
+  const handleAddActivity = async (newActivity) => {
+    try {
+      // Use API to add activity to trip
+      await tripApi.addActivity(tripId, newActivity);
       
-      // Update state immediately
-      setCurrentTrip(prev => ({
-        ...prev,
-        activities: [...(prev.activities || []), newActivity]
-      }));
+      // Refresh trip data to get updated activities list
+      await fetchTripData();
       
-      // Initialize ratings for new activity
-      const newRatings = {};
-      trip.participants.forEach(participant => {
-        newRatings[participant] = Math.floor(Math.random() * 6);
-      });
-      setActivityRatings(prev => ({
-        ...prev,
-        [newActivity.id]: newRatings
-      }));
+      setShowActivityForm(false);
+    } catch (error) {
+      console.error('Failed to add activity:', error);
+      // Show error to user but don't close form so they can retry
+      setError(`Failed to add activity: ${error.message}`);
     }
-    setShowActivityForm(false);
   };
 
-  const handleAddRestaurant = (newRestaurant) => {
-    // For user trips, save to localStorage and update state
-    if (parseInt(tripId) < 1000) {
-      const userTrips = JSON.parse(localStorage.getItem('userTrips') || '[]');
-      const updatedTrips = userTrips.map(trip => {
-        if (trip.id === parseInt(tripId)) {
-          return {
-            ...trip,
-            restaurants: [...(trip.restaurants || []), newRestaurant]
-          };
-        }
-        return trip;
-      });
-      localStorage.setItem('userTrips', JSON.stringify(updatedTrips));
+  const handleAddRestaurant = async (newRestaurant) => {
+    try {
+      // Use API to add restaurant to trip
+      await tripApi.addRestaurant(tripId, newRestaurant);
       
-      // Update state immediately
-      setCurrentTrip(prev => ({
-        ...prev,
-        restaurants: [...(prev.restaurants || []), newRestaurant]
-      }));
+      // Refresh trip data to get updated restaurants list
+      await fetchTripData();
       
-      // Initialize ratings for new restaurant
-      const newRatings = {};
-      trip.participants.forEach(participant => {
-        newRatings[participant] = Math.floor(Math.random() * 6);
-      });
-      setRestaurantRatings(prev => ({
-        ...prev,
-        [newRestaurant.id]: newRatings
-      }));
+      setShowRestaurantForm(false);
+    } catch (error) {
+      console.error('Failed to add restaurant:', error);
+      // Show error to user but don't close form so they can retry
+      setError(`Failed to add restaurant: ${error.message}`);
     }
-    setShowRestaurantForm(false);
   };
 
   // Loading state

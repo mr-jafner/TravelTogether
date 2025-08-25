@@ -9,6 +9,7 @@ const ActivityForm = ({ onAddActivity, onCancel }) => {
     duration: ''
   });
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const categories = [
     'Entertainment', 'Sightseeing', 'Culture', 'Recreation', 
@@ -62,19 +63,22 @@ const ActivityForm = ({ onAddActivity, onCancel }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
-      const newActivity = {
-        id: Date.now(), // Simple ID generation
-        name: formData.name,
-        category: formData.category,
-        location: formData.location,
-        cost: parseFloat(formData.cost),
-        duration: formData.duration,
-        votes: 0
-      };
-      onAddActivity(newActivity);
+      setIsSubmitting(true);
+      try {
+        const newActivity = {
+          name: formData.name,
+          category: formData.category,
+          location: formData.location,
+          cost: parseFloat(formData.cost),
+          duration: formData.duration
+        };
+        await onAddActivity(newActivity);
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -192,14 +196,24 @@ const ActivityForm = ({ onAddActivity, onCancel }) => {
         <div className="flex gap-3 pt-2">
           <button
             type="submit"
-            className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+            disabled={isSubmitting}
+            className={`font-medium py-2 px-4 rounded-lg transition-colors ${
+              isSubmitting 
+                ? 'bg-blue-300 text-white cursor-not-allowed' 
+                : 'bg-blue-500 hover:bg-blue-600 text-white'
+            }`}
           >
-            Add Activity
+            {isSubmitting ? 'Adding Activity...' : 'Add Activity'}
           </button>
           <button
             type="button"
             onClick={onCancel}
-            className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors"
+            disabled={isSubmitting}
+            className={`font-medium py-2 px-4 rounded-lg transition-colors ${
+              isSubmitting 
+                ? 'bg-gray-50 text-gray-400 cursor-not-allowed' 
+                : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+            }`}
           >
             Cancel
           </button>

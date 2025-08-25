@@ -11,6 +11,7 @@ const RestaurantForm = ({ onAddRestaurant, onCancel }) => {
     groupCapacity: ''
   });
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const cuisines = [
     'American', 'Italian', 'Mexican', 'Chinese', 'Japanese', 'Indian', 'Thai',
@@ -78,21 +79,24 @@ const RestaurantForm = ({ onAddRestaurant, onCancel }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
-      const newRestaurant = {
-        id: Date.now(), // Simple ID generation
-        name: formData.name,
-        cuisine: formData.cuisine,
-        location: formData.location,
-        cost: parseFloat(formData.cost),
-        priceRange: formData.priceRange,
-        dietaryOptions: formData.dietaryOptions,
-        groupCapacity: parseInt(formData.groupCapacity),
-        votes: 0
-      };
-      onAddRestaurant(newRestaurant);
+      setIsSubmitting(true);
+      try {
+        const newRestaurant = {
+          name: formData.name,
+          cuisine: formData.cuisine,
+          location: formData.location,
+          cost: parseFloat(formData.cost),
+          priceRange: formData.priceRange,
+          dietaryOptions: formData.dietaryOptions,
+          groupCapacity: parseInt(formData.groupCapacity)
+        };
+        await onAddRestaurant(newRestaurant);
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -251,14 +255,24 @@ const RestaurantForm = ({ onAddRestaurant, onCancel }) => {
         <div className="flex gap-3 pt-2">
           <button
             type="submit"
-            className="bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+            disabled={isSubmitting}
+            className={`font-medium py-2 px-4 rounded-lg transition-colors ${
+              isSubmitting 
+                ? 'bg-orange-300 text-white cursor-not-allowed' 
+                : 'bg-orange-500 hover:bg-orange-600 text-white'
+            }`}
           >
-            Add Restaurant
+            {isSubmitting ? 'Adding Restaurant...' : 'Add Restaurant'}
           </button>
           <button
             type="button"
             onClick={onCancel}
-            className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors"
+            disabled={isSubmitting}
+            className={`font-medium py-2 px-4 rounded-lg transition-colors ${
+              isSubmitting 
+                ? 'bg-gray-50 text-gray-400 cursor-not-allowed' 
+                : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+            }`}
           >
             Cancel
           </button>
