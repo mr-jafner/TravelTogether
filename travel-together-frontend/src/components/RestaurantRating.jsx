@@ -1,16 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { ratingApi } from '../services/api';
 
-const RestaurantRating = ({ restaurant, participants, currentUser, onRatingChange, tripId }) => {
-  // Initialize ratings state - each participant starts with rating 2 (indifferent)
-  const [ratings, setRatings] = useState(() => {
-    const initialRatings = {};
-    participants.forEach(participant => {
-      // Convert existing votes to mock individual ratings for demo
-      initialRatings[participant] = Math.floor(Math.random() * 6); // 0-5 random for now
-    });
-    return initialRatings;
-  });
+const RestaurantRating = ({ restaurant, participants, currentUser, onRatingChange, tripId, ratings = {} }) => {
+  // Use parent's ratings state instead of local state
 
   const handleRatingClick = async (participant, rating) => {
     // Only allow editing current user's rating
@@ -23,7 +15,6 @@ const RestaurantRating = ({ restaurant, participants, currentUser, onRatingChang
       }
       
       const newRatings = { ...ratings, [participant]: rating };
-      setRatings(newRatings);
       if (onRatingChange) {
         onRatingChange(restaurant.id, newRatings);
       }

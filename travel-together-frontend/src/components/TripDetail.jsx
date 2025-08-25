@@ -5,6 +5,14 @@ import RestaurantRating from './RestaurantRating';
 import ActivityForm from './ActivityForm';
 import RestaurantForm from './RestaurantForm';
 import { tripApi, transformTripForFrontend } from '../services/api';
+import TabNavigation from './TabNavigation';
+import ActivitiesTab from './ActivitiesTab';
+import FoodTab from './FoodTab';
+import TravelTab from './TravelTab';
+import LodgingTab from './LodgingTab';
+import LogisticsTab from './LogisticsTab';
+import ItineraryTab from './ItineraryTab';
+import GroupAnalysisTab from './GroupAnalysisTab';
 
 const TripDetail = () => {
   const { tripId } = useParams();
@@ -14,6 +22,7 @@ const TripDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [activeTab, setActiveTab] = useState('activities');
   
   // Fetch trip data function (reusable)
   const fetchTripData = async () => {
@@ -50,34 +59,38 @@ const TripDetail = () => {
 
   const trip = currentTrip;
 
-  // Initialize state AFTER trip is found
-  const [activityRatings, setActivityRatings] = useState(() => {
-    if (!trip || !trip.activities) return {};
-    
-    const initialRatings = {};
-    trip.activities.forEach(activity => {
-      const participantRatings = {};
-      trip.participants.forEach(participant => {
-        participantRatings[participant] = Math.floor(Math.random() * 6);
-      });
-      initialRatings[activity.id] = participantRatings;
-    });
-    return initialRatings;
-  });
+  // Initialize rating states
+  const [activityRatings, setActivityRatings] = useState({});
+  const [restaurantRatings, setRestaurantRatings] = useState({});
 
-  const [restaurantRatings, setRestaurantRatings] = useState(() => {
-    if (!trip || !trip.restaurants) return {};
-    
-    const initialRatings = {};
-    trip.restaurants.forEach(restaurant => {
-      const participantRatings = {};
-      trip.participants.forEach(participant => {
-        participantRatings[participant] = Math.floor(Math.random() * 6);
+  // Initialize ratings after trip data loads
+  useEffect(() => {
+    if (trip && trip.activities && trip.participants) {
+      const initialRatings = {};
+      trip.activities.forEach(activity => {
+        const participantRatings = {};
+        trip.participants.forEach(participant => {
+          participantRatings[participant] = Math.floor(Math.random() * 6);
+        });
+        initialRatings[activity.id] = participantRatings;
       });
-      initialRatings[restaurant.id] = participantRatings;
-    });
-    return initialRatings;
-  });
+      setActivityRatings(initialRatings);
+    }
+  }, [trip]);
+
+  useEffect(() => {
+    if (trip && trip.restaurants && trip.participants) {
+      const initialRatings = {};
+      trip.restaurants.forEach(restaurant => {
+        const participantRatings = {};
+        trip.participants.forEach(participant => {
+          participantRatings[participant] = Math.floor(Math.random() * 6);
+        });
+        initialRatings[restaurant.id] = participantRatings;
+      });
+      setRestaurantRatings(initialRatings);
+    }
+  }, [trip]);
 
   const handleActivityRatingChange = (activityId, ratings) => {
     setActivityRatings(prev => ({
@@ -233,262 +246,127 @@ const TripDetail = () => {
             ))}
           </div>
         </div>
-        
-        {/* Activities Section */}
-        <div className="mb-8">
-          <h3 className="text-2xl font-bold text-gray-900 mb-2 flex items-center">
-            <svg className="w-7 h-7 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-            </svg>
-            Activities ({trip.activities?.length || 0}) - Rate 0-5
-          </h3>
-          
-          {trip.activities && trip.activities.length > 0 ? (
-            <>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                <p className="text-sm text-blue-800">
-                  <strong>How it works:</strong> Rate each activity from 0-5 based on your interest level. 
-                  The system automatically calculates group consensus and highlights popular activities vs. those that might work better for subgroups.
-                </p>
-              </div>
-              
-              {trip.activities.map(activity => (
-                <ActivityRating
-                  key={activity.id}
-                  activity={activity}
-                  participants={trip.participants}
-                  currentUser={trip.currentUser}
-                  onRatingChange={handleActivityRatingChange}
-                  tripId={trip.id}
-                />
-              ))}
-            </>
-          ) : (
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
-              <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              <h4 className="text-lg font-semibold text-gray-700 mb-2">No Activities Yet</h4>
-              <p className="text-gray-500 mb-4">
-                Start adding activities you'd like to do on this trip. Your group can then vote on their preferences!
-              </p>
-              <button 
-                onClick={() => setShowActivityForm(true)}
-                className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-              >
-                Add First Activity
-              </button>
-            </div>
-          )}
-        </div>
 
-        {/* Restaurants Section */}
-        <div className="mb-8">
-          <h3 className="text-2xl font-bold text-gray-900 mb-2 flex items-center">
-            <svg className="w-7 h-7 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-            </svg>
-            Restaurants ({trip.restaurants?.length || 0}) - Rate 0-5
-          </h3>
-          
-          {trip.restaurants && trip.restaurants.length > 0 ? (
-            <>
-              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
-                <p className="text-sm text-orange-800">
-                  <strong>How it works:</strong> Rate each restaurant from 0-5 based on your interest level. 
-                  The system helps identify dining preferences and finds restaurants that work for the whole group or suggest subgroup dining.
-                </p>
-              </div>
-              
-              {trip.restaurants.map(restaurant => (
-                <RestaurantRating
-                  key={restaurant.id}
-                  restaurant={restaurant}
-                  participants={trip.participants}
-                  currentUser={trip.currentUser}
-                  onRatingChange={handleRestaurantRatingChange}
-                  tripId={trip.id}
-                />
-              ))}
-            </>
-          ) : (
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
-              <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              <h4 className="text-lg font-semibold text-gray-700 mb-2">No Restaurants Yet</h4>
-              <p className="text-gray-500 mb-4">
-                Add restaurants you'd like to try on this trip. Your group can vote on their dining preferences!
-              </p>
-              <button 
-                onClick={() => setShowRestaurantForm(true)}
-                className="bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-              >
-                Add First Restaurant
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Activity Form */}
-        {showActivityForm && (
-          <ActivityForm 
-            onAddActivity={handleAddActivity}
-            onCancel={() => setShowActivityForm(false)}
-          />
-        )}
-
-        {/* Restaurant Form */}
-        {showRestaurantForm && (
-          <RestaurantForm 
-            onAddRestaurant={handleAddRestaurant}
-            onCancel={() => setShowRestaurantForm(false)}
-          />
-        )}
-
-        {/* Group Analysis Section */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6 mb-8">
-          <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-            <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-            Group Analysis
-          </h3>
+        {/* Tabbed Interface */}
+        <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
           {(() => {
-            // Calculate consensus data for activities
-            const activityConsensusData = (trip.activities || []).map(activity => {
-              const ratings = activityRatings[activity.id] || {};
-              const values = Object.values(ratings);
-              const avg = values.length ? values.reduce((sum, r) => sum + r, 0) / values.length : 2.5;
-              const interested = values.filter(r => r >= 3).length;
-              const mustDo = values.filter(r => r === 5).length;
-              return { ...activity, avg, interested, mustDo, total: trip.participants.length, type: 'activity' };
-            }).sort((a, b) => b.avg - a.avg);
-
-            // Calculate consensus data for restaurants
-            const restaurantConsensusData = (trip.restaurants || []).map(restaurant => {
-              const ratings = restaurantRatings[restaurant.id] || {};
-              const values = Object.values(ratings);
-              const avg = values.length ? values.reduce((sum, r) => sum + r, 0) / values.length : 2.5;
-              const interested = values.filter(r => r >= 3).length;
-              const mustEat = values.filter(r => r === 5).length;
-              return { ...restaurant, avg, interested, mustEat, total: trip.participants.length, type: 'restaurant' };
-            }).sort((a, b) => b.avg - a.avg);
-
-            const strongActivityConsensus = activityConsensusData.filter(a => a.avg >= 4);
-            const strongRestaurantConsensus = restaurantConsensusData.filter(r => r.avg >= 4);
-            const divisiveActivities = activityConsensusData.filter(a => a.interested > 0 && a.interested < a.total * 0.6);
-            const divisiveRestaurants = restaurantConsensusData.filter(r => r.interested > 0 && r.interested < r.total * 0.6);
+            const tabs = [
+              { 
+                id: 'activities', 
+                name: 'Activities', 
+                count: trip.activities?.length || 0,
+                icon: '🎯'
+              },
+              { 
+                id: 'food', 
+                name: 'Food', 
+                count: trip.restaurants?.length || 0,
+                icon: '🍽️'
+              },
+              { 
+                id: 'travel', 
+                name: 'Travel', 
+                count: 0,
+                icon: '✈️'
+              },
+              { 
+                id: 'lodging', 
+                name: 'Lodging', 
+                count: 0,
+                icon: '🏨'
+              },
+              { 
+                id: 'logistics', 
+                name: 'Logistics', 
+                count: 0,
+                icon: '📋'
+              },
+              { 
+                id: 'itinerary', 
+                name: 'Itinerary', 
+                count: 0,
+                icon: '📅'
+              },
+              { 
+                id: 'analysis', 
+                name: 'Group Analysis', 
+                count: 0,
+                icon: '📊'
+              }
+            ];
 
             return (
-              <div className="space-y-4">
-                {(strongActivityConsensus.length > 0 || strongRestaurantConsensus.length > 0) && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <h4 className="font-bold text-green-800 mb-3 flex items-center">
-                      <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
-                      Strong Group Consensus
-                    </h4>
-                    <div className="space-y-3">
-                      {strongActivityConsensus.length > 0 && (
-                        <div>
-                          <h5 className="text-sm font-semibold text-green-700 mb-2">Activities:</h5>
-                          <div className="space-y-1">
-                            {strongActivityConsensus.map(activity => (
-                              <div key={`activity-${activity.id}`} className="text-sm text-green-700 flex justify-between">
-                                <span className="font-medium">{activity.name}</span>
-                                <span className="text-green-600">
-                                  {activity.avg.toFixed(1)}/5 avg • {activity.interested}/{activity.total} interested
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                      {strongRestaurantConsensus.length > 0 && (
-                        <div>
-                          <h5 className="text-sm font-semibold text-green-700 mb-2">Restaurants:</h5>
-                          <div className="space-y-1">
-                            {strongRestaurantConsensus.map(restaurant => (
-                              <div key={`restaurant-${restaurant.id}`} className="text-sm text-green-700 flex justify-between">
-                                <span className="font-medium">{restaurant.name}</span>
-                                <span className="text-green-600">
-                                  {restaurant.avg.toFixed(1)}/5 avg • {restaurant.interested}/{restaurant.total} interested
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+              <>
+                <TabNavigation 
+                  activeTab={activeTab} 
+                  setActiveTab={setActiveTab} 
+                  tabs={tabs} 
+                />
+                
+                {activeTab === 'activities' && (
+                  <ActivitiesTab
+                    trip={trip}
+                    activityRatings={activityRatings}
+                    onActivityRatingChange={handleActivityRatingChange}
+                    showActivityForm={showActivityForm}
+                    setShowActivityForm={setShowActivityForm}
+                    onAddActivity={handleAddActivity}
+                  />
                 )}
                 
-                {(divisiveActivities.length > 0 || divisiveRestaurants.length > 0) && (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                    <h4 className="font-bold text-yellow-800 mb-3 flex items-center">
-                      <span className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></span>
-                      Mixed Opinions - Consider Subgroups
-                    </h4>
-                    <div className="space-y-3">
-                      {divisiveActivities.length > 0 && (
-                        <div>
-                          <h5 className="text-sm font-semibold text-yellow-700 mb-2">Activities:</h5>
-                          <div className="space-y-1">
-                            {divisiveActivities.map(activity => (
-                              <div key={`div-activity-${activity.id}`} className="text-sm text-yellow-700 flex justify-between">
-                                <span className="font-medium">{activity.name}</span>
-                                <span className="text-yellow-600">
-                                  {activity.interested}/{activity.total} interested
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                      {divisiveRestaurants.length > 0 && (
-                        <div>
-                          <h5 className="text-sm font-semibold text-yellow-700 mb-2">Restaurants:</h5>
-                          <div className="space-y-1">
-                            {divisiveRestaurants.map(restaurant => (
-                              <div key={`div-restaurant-${restaurant.id}`} className="text-sm text-yellow-700 flex justify-between">
-                                <span className="font-medium">{restaurant.name}</span>
-                                <span className="text-yellow-600">
-                                  {restaurant.interested}/{restaurant.total} interested
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                {activeTab === 'food' && (
+                  <FoodTab
+                    trip={trip}
+                    restaurantRatings={restaurantRatings}
+                    onRestaurantRatingChange={handleRestaurantRatingChange}
+                    showRestaurantForm={showRestaurantForm}
+                    setShowRestaurantForm={setShowRestaurantForm}
+                    onAddRestaurant={handleAddRestaurant}
+                  />
+                )}
+                
+                {activeTab === 'travel' && (
+                  <TravelTab trip={trip} />
+                )}
+                
+                {activeTab === 'lodging' && (
+                  <LodgingTab trip={trip} />
+                )}
+                
+                {activeTab === 'logistics' && (
+                  <LogisticsTab trip={trip} />
+                )}
+                
+                {activeTab === 'itinerary' && (
+                  <ItineraryTab trip={trip} />
+                )}
+                
+                {activeTab === 'analysis' && (
+                  <GroupAnalysisTab
+                    trip={trip}
+                    activityRatings={activityRatings}
+                    restaurantRatings={restaurantRatings}
+                  />
+                )}
+                
+                {/* Activity Form */}
+                {showActivityForm && (
+                  <ActivityForm 
+                    onAddActivity={handleAddActivity}
+                    onCancel={() => setShowActivityForm(false)}
+                  />
                 )}
 
-                {strongActivityConsensus.length === 0 && strongRestaurantConsensus.length === 0 && 
-                 divisiveActivities.length === 0 && divisiveRestaurants.length === 0 && (
-                  <div className="text-center text-gray-500 py-4">
-                    <p>Start rating activities and restaurants to see group analysis!</p>
-                  </div>
+                {/* Restaurant Form */}
+                {showRestaurantForm && (
+                  <RestaurantForm 
+                    onAddRestaurant={handleAddRestaurant}
+                    onCancel={() => setShowRestaurantForm(false)}
+                  />
                 )}
-              </div>
+              </>
             );
           })()}
-        </div>
-
-        {/* Trip Info Section */}
-        <div className="bg-white rounded-xl shadow-sm p-6">
-          <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-            <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            Trip Information
-          </h3>
-          <div className="bg-gray-50 rounded-lg p-4">
-            <p className="text-gray-600 mb-2">Trip logistics panel coming soon...</p>
-            <p className="text-sm text-gray-500">
-              <em>This will include: Wi-Fi passwords, room numbers, flight details, important notes, and more.</em>
-            </p>
-          </div>
         </div>
       </div>
     </div>
