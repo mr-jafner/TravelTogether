@@ -24,9 +24,11 @@ const RestaurantRating = ({ restaurant, participants, currentUser, onRatingChang
     }
   };
 
-  // Calculate group stats
+  // Calculate group stats - add safety checks
   const ratingValues = Object.values(ratings);
-  const averageRating = ratingValues.reduce((sum, rating) => sum + rating, 0) / ratingValues.length;
+  const averageRating = ratingValues.length > 0 
+    ? ratingValues.reduce((sum, rating) => sum + rating, 0) / ratingValues.length 
+    : 0; // Default to 0 if no ratings
   const interestedCount = ratingValues.filter(rating => rating >= 3).length;
   const mustEatCount = ratingValues.filter(rating => rating === 5).length;
   const wontEatCount = ratingValues.filter(rating => rating === 0).length;
@@ -83,7 +85,9 @@ const RestaurantRating = ({ restaurant, participants, currentUser, onRatingChang
     }
   };
 
-  const currentConfig = ratingConfig[Math.round(averageRating)];
+  // Safely get config with fallback to neutral rating
+  const roundedRating = Math.round(averageRating);
+  const currentConfig = ratingConfig[roundedRating] || ratingConfig[2]; // Fallback to "Maybe" (rating 2)
 
   // Helper function to get dietary restriction emoji
   const getDietaryIcon = (option) => {
@@ -184,7 +188,7 @@ const RestaurantRating = ({ restaurant, participants, currentUser, onRatingChang
         <div className="space-y-3">
           {participants.map(participant => {
             const participantRating = ratings[participant];
-            const participantConfig = ratingConfig[participantRating];
+            const participantConfig = ratingConfig[participantRating] || ratingConfig[2]; // Fallback to "Maybe"
             const isCurrentUser = participant === currentUser;
             
             return (

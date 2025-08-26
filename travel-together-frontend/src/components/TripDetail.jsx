@@ -59,34 +59,36 @@ const TripDetail = () => {
 
   const trip = currentTrip;
 
-  // Initialize rating states
+  // Initialize rating states with simple vote counts from API
   const [activityRatings, setActivityRatings] = useState({});
   const [restaurantRatings, setRestaurantRatings] = useState({});
 
-  // Initialize ratings after trip data loads
+  // Initialize ratings after trip data loads - use API vote counts
   useEffect(() => {
-    if (trip && trip.activities && trip.participants) {
+    if (trip && trip.activities) {
       const initialRatings = {};
       trip.activities.forEach(activity => {
-        const participantRatings = {};
-        trip.participants.forEach(participant => {
-          participantRatings[participant] = Math.floor(Math.random() * 6);
-        });
-        initialRatings[activity.id] = participantRatings;
+        // Use the vote count from API and create simple rating structure
+        const avgRating = Math.min(5, Math.max(0, Math.floor(activity.votes || 0)));
+        initialRatings[activity.id] = {
+          averageRating: avgRating,
+          totalVotes: activity.votes || 0
+        };
       });
       setActivityRatings(initialRatings);
     }
   }, [trip]);
 
   useEffect(() => {
-    if (trip && trip.restaurants && trip.participants) {
+    if (trip && trip.restaurants) {
       const initialRatings = {};
       trip.restaurants.forEach(restaurant => {
-        const participantRatings = {};
-        trip.participants.forEach(participant => {
-          participantRatings[participant] = Math.floor(Math.random() * 6);
-        });
-        initialRatings[restaurant.id] = participantRatings;
+        // Use the vote count from API and create simple rating structure
+        const avgRating = Math.min(5, Math.max(0, Math.floor(restaurant.votes || 0)));
+        initialRatings[restaurant.id] = {
+          averageRating: avgRating,
+          totalVotes: restaurant.votes || 0
+        };
       });
       setRestaurantRatings(initialRatings);
     }
