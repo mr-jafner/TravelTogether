@@ -16,7 +16,7 @@ const PORT = process.env.PORT || 3001;
 app.use(helmet());
 app.use(morgan('combined'));
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174', 'https://jafner.com', 'http://jafner.com'],
+  origin: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:5175', 'http://localhost:5176', 'https://jafner.com', 'http://jafner.com'],
   credentials: true
 }));
 app.use(express.json());
