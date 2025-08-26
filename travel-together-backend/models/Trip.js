@@ -127,7 +127,7 @@ class Trip {
         SELECT 
           r.*,
           COUNT(rr.rating) as votes,
-          GROUP_CONCAT(rdo.dietary_option) as dietary_options
+          GROUP_CONCAT(DISTINCT rdo.dietary_option) as dietary_options
         FROM restaurants r
         LEFT JOIN restaurant_ratings rr ON r.id = rr.restaurant_id
         LEFT JOIN restaurant_dietary_options rdo ON r.id = rdo.restaurant_id
