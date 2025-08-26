@@ -1,5 +1,9 @@
 // API service layer for TravelTogether backend communication
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || (
+  window.location.hostname === 'jafner.com' 
+    ? 'https://jafner.com/api'
+    : 'http://localhost:3001/api'
+);
 
 // Generic API request handler with error handling
 async function apiRequest(endpoint, options = {}) {
