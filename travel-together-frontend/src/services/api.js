@@ -126,12 +126,32 @@ export const ratingApi = {
 
   // Get activity ratings
   getActivityRatings: async (tripId, activityId) => {
-    return apiRequest(`/trips/${tripId}/activities/${activityId}/ratings`);
+    const ratingsArray = await apiRequest(`/trips/${tripId}/activities/${activityId}/ratings`);
+    console.log('📊 Raw activity ratings from API:', ratingsArray);
+    
+    // Transform array format to object format: {[participant]: rating}
+    const ratingsObject = {};
+    ratingsArray.forEach(ratingData => {
+      ratingsObject[ratingData.participant_name] = ratingData.rating;
+    });
+    
+    console.log('🔄 Transformed activity ratings:', ratingsObject);
+    return ratingsObject;
   },
 
   // Get restaurant ratings
   getRestaurantRatings: async (tripId, restaurantId) => {
-    return apiRequest(`/trips/${tripId}/restaurants/${restaurantId}/ratings`);
+    const ratingsArray = await apiRequest(`/trips/${tripId}/restaurants/${restaurantId}/ratings`);
+    console.log('📊 Raw restaurant ratings from API:', ratingsArray);
+    
+    // Transform array format to object format: {[participant]: rating}
+    const ratingsObject = {};
+    ratingsArray.forEach(ratingData => {
+      ratingsObject[ratingData.participant_name] = ratingData.rating;
+    });
+    
+    console.log('🔄 Transformed restaurant ratings:', ratingsObject);
+    return ratingsObject;
   },
 };
 
