@@ -104,30 +104,23 @@ export const tripApi = {
 export const ratingApi = {
   // Rate an activity
   rateActivity: async (tripId, activityId, participantName, rating) => {
-    console.log('📡 API: Rating activity', { tripId, activityId, participantName, rating });
-    const response = await apiRequest(`/trips/${tripId}/activities/${activityId}/rate`, {
+    return apiRequest(`/trips/${tripId}/activities/${activityId}/rate`, {
       method: 'POST',
       body: JSON.stringify({ participantName, rating }),
     });
-    console.log('✅ API: Activity rating response:', response);
-    return response;
   },
 
   // Rate a restaurant
   rateRestaurant: async (tripId, restaurantId, participantName, rating) => {
-    console.log('📡 API: Rating restaurant', { tripId, restaurantId, participantName, rating });
-    const response = await apiRequest(`/trips/${tripId}/restaurants/${restaurantId}/rate`, {
+    return apiRequest(`/trips/${tripId}/restaurants/${restaurantId}/rate`, {
       method: 'POST',
       body: JSON.stringify({ participantName, rating }),
     });
-    console.log('✅ API: Restaurant rating response:', response);
-    return response;
   },
 
   // Get activity ratings
   getActivityRatings: async (tripId, activityId) => {
     const ratingsArray = await apiRequest(`/trips/${tripId}/activities/${activityId}/ratings`);
-    console.log('📊 Raw activity ratings from API:', ratingsArray);
     
     // Transform array format to object format: {[participant]: rating}
     const ratingsObject = {};
@@ -135,14 +128,12 @@ export const ratingApi = {
       ratingsObject[ratingData.participant_name] = ratingData.rating;
     });
     
-    console.log('🔄 Transformed activity ratings:', ratingsObject);
     return ratingsObject;
   },
 
   // Get restaurant ratings
   getRestaurantRatings: async (tripId, restaurantId) => {
     const ratingsArray = await apiRequest(`/trips/${tripId}/restaurants/${restaurantId}/ratings`);
-    console.log('📊 Raw restaurant ratings from API:', ratingsArray);
     
     // Transform array format to object format: {[participant]: rating}
     const ratingsObject = {};
@@ -150,7 +141,6 @@ export const ratingApi = {
       ratingsObject[ratingData.participant_name] = ratingData.rating;
     });
     
-    console.log('🔄 Transformed restaurant ratings:', ratingsObject);
     return ratingsObject;
   },
 };

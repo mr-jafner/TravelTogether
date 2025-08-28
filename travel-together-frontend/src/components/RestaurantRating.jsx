@@ -5,64 +5,33 @@ const RestaurantRating = ({ restaurant, participants, currentUser, onRatingChang
   // Use parent's ratings state instead of local state
 
   const handleRatingClick = async (participant, rating) => {
-    console.log('🍽️ Restaurant rating click debug:', {
-      participant, 
-      rating, 
-      currentRatings: ratings,
-      restaurantId: restaurant.id,
-      currentUser,
-      tripId
-    });
-    
     // Only allow editing current user's rating
     if (participant !== currentUser) return;
     
     try {
       // Update rating via API
       if (tripId) {
-        console.log('📡 Making API call to rate restaurant');
-        const apiResponse = await ratingApi.rateRestaurant(tripId, restaurant.id, participant, rating);
-        console.log('✅ Restaurant API response:', apiResponse);
+        await ratingApi.rateRestaurant(tripId, restaurant.id, participant, rating);
       }
       
       const newRatings = { ...ratings, [participant]: rating };
-      console.log('🔄 New restaurant ratings state:', newRatings);
-      
       if (onRatingChange) {
-        console.log('📤 Calling restaurant onRatingChange with newRatings:', newRatings);
         onRatingChange(newRatings);
-      } else {
-        console.warn('⚠️ Restaurant onRatingChange callback is missing');
       }
     } catch (error) {
-      console.error('❌ Failed to update restaurant rating:', error);
+      console.error('Failed to update restaurant rating:', error);
       // Could add user-facing error handling here
     }
   };
 
-  // Calculate group stats - add safety checks and debug logging
+  // Calculate group stats - add safety checks
   const ratingValues = Object.values(ratings);
-  console.log('📊 RestaurantRating calculation debug:', {
-    ratingsObject: ratings,
-    ratingValues,
-    participants,
-    restaurantName: restaurant.name
-  });
-  
   const averageRating = ratingValues.length > 0 
     ? ratingValues.reduce((sum, rating) => sum + rating, 0) / ratingValues.length 
     : 0; // Default to 0 if no ratings
   const interestedCount = ratingValues.filter(rating => rating >= 3).length;
   const mustEatCount = ratingValues.filter(rating => rating === 5).length;
   const wontEatCount = ratingValues.filter(rating => rating === 0).length;
-  
-  console.log('📊 RestaurantRating calculated stats:', {
-    averageRating,
-    interestedCount,
-    mustEatCount,
-    wontEatCount,
-    restaurantName: restaurant.name
-  });
 
   // Restaurant-focused rating configuration
   const ratingConfig = {
