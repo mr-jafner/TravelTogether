@@ -112,10 +112,10 @@ const RestaurantRating = ({ restaurant, participants, currentUser, onRatingChang
   };
 
   return (
-    <div className={`border rounded-lg p-6 mb-4 transition-all duration-300 hover:shadow-md ${currentConfig.bgColor} ${currentConfig.borderColor}`}>
+    <div className={`border rounded-lg p-4 sm:p-6 mb-4 transition-all duration-300 hover:shadow-md ${currentConfig.bgColor} ${currentConfig.borderColor}`}>
       {/* Restaurant Header */}
       <div className="mb-4">
-        <div className="flex justify-between items-start">
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start space-y-3 lg:space-y-0">
           <div className="flex-1">
             <h4 className="text-xl font-bold text-gray-900 mb-2">
               {restaurant.name}
@@ -149,7 +149,7 @@ const RestaurantRating = ({ restaurant, participants, currentUser, onRatingChang
               </div>
             )}
           </div>
-          <div className="text-right ml-4">
+          <div className="text-center lg:text-right lg:ml-4">
             <div className={`text-2xl font-bold ${currentConfig.textColor}`}>
               {averageRating.toFixed(1)}/5
             </div>
@@ -161,7 +161,7 @@ const RestaurantRating = ({ restaurant, participants, currentUser, onRatingChang
       </div>
 
       {/* Group Summary Badges */}
-      <div className="mb-4 flex flex-wrap gap-2">
+      <div className="mb-4 flex flex-wrap gap-1 sm:gap-2 justify-center sm:justify-start">
         {mustEatCount > 0 && (
           <span className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-amber-100 text-amber-800">
             <span className="w-2 h-2 bg-amber-500 rounded-full mr-2"></span>
@@ -185,24 +185,29 @@ const RestaurantRating = ({ restaurant, participants, currentUser, onRatingChang
       {/* Individual Ratings */}
       <div>
         <div className="text-sm font-semibold text-gray-700 mb-3">Individual Ratings:</div>
-        <div className="space-y-3">
+        <div className="space-y-2 sm:space-y-3">
           {participants.map(participant => {
             const participantRating = ratings[participant];
             const participantConfig = ratingConfig[participantRating] || ratingConfig[2]; // Fallback to "Maybe"
             const isCurrentUser = participant === currentUser;
             
             return (
-              <div key={participant} className={`flex items-center justify-between p-3 rounded-lg backdrop-blur-sm ${
-                isCurrentUser 
+              <div key={participant} className={`
+                flex flex-col sm:flex-row sm:items-center sm:justify-between 
+                p-3 rounded-lg backdrop-blur-sm space-y-2 sm:space-y-0
+                ${isCurrentUser 
                   ? 'bg-orange-50 border-2 border-orange-200 bg-opacity-90' 
                   : 'bg-white bg-opacity-70'
-              }`}>
-                <span className={`text-sm font-medium min-w-0 flex-1 ${
-                  isCurrentUser ? 'text-orange-900' : 'text-gray-900'
-                }`}>
+                }
+              `}>
+                <span className={`
+                  text-sm font-medium text-center sm:text-left
+                  ${isCurrentUser ? 'text-orange-900' : 'text-gray-900'}
+                `}>
                   {isCurrentUser ? `${participant} (You)` : participant}
                 </span>
-                <div className="flex items-center gap-1 ml-4">
+                <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-1 ml-0 sm:ml-4">
+                  <div className="flex items-center gap-1 flex-wrap justify-center sm:justify-start">
                   {[0, 1, 2, 3, 4, 5].map(rating => {
                     const config = ratingConfig[rating];
                     const isActive = participantRating === rating;
@@ -214,7 +219,11 @@ const RestaurantRating = ({ restaurant, participants, currentUser, onRatingChang
                         onClick={() => handleRatingClick(participant, rating)}
                         disabled={!canEdit}
                         className={`
-                          w-8 h-8 text-xs border-2 rounded-md font-bold
+                          w-10 h-10 sm:w-8 sm:h-8 
+                          text-sm sm:text-xs 
+                          border-2 rounded-md font-bold
+                          min-w-[44px] min-h-[44px] sm:min-w-[32px] sm:min-h-[32px]
+                          mx-0.5 sm:mx-0
                           transition-all duration-200 ease-in-out
                           ${canEdit ? 'transform hover:scale-110 active:scale-95 cursor-pointer' : 'cursor-not-allowed opacity-75'}
                           ${isActive 
@@ -230,7 +239,8 @@ const RestaurantRating = ({ restaurant, participants, currentUser, onRatingChang
                       </button>
                     );
                   })}
-                  <span className={`ml-3 text-xs font-semibold ${
+                  </div>
+                  <span className={`text-center sm:text-left ml-0 sm:ml-3 text-xs font-semibold ${
                     isCurrentUser ? 'text-orange-700' : participantConfig.textColor
                   }`}>
                     {participantConfig.label}
@@ -244,14 +254,16 @@ const RestaurantRating = ({ restaurant, participants, currentUser, onRatingChang
 
       {/* Rating Scale Legend */}
       <div className="mt-4 pt-4 border-t border-gray-200">
-        <div className="text-xs text-gray-500 text-center">
-          <span className="font-medium">Rating Scale:</span> 
-          <span className="mx-1">0=Won't eat</span> • 
-          <span className="mx-1">1=Not interested</span> • 
-          <span className="mx-1">2=Neutral</span> • 
-          <span className="mx-1">3=Would try</span> • 
-          <span className="mx-1">4=Want to go</span> • 
-          <span className="mx-1">5=Must eat</span>
+        <div className="text-xs sm:text-xs text-gray-500 text-center">
+          <div className="font-medium mb-1 sm:mb-0 sm:inline">Rating Scale:</div>
+          <div className="flex flex-wrap justify-center gap-x-2 gap-y-1 sm:inline">
+            <span>0=Won't eat</span>
+            <span>1=Not interested</span>
+            <span>2=Neutral</span>
+            <span>3=Would try</span>
+            <span>4=Want to go</span>
+            <span>5=Must eat</span>
+          </div>
         </div>
       </div>
     </div>
