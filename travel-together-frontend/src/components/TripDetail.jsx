@@ -4,7 +4,7 @@ import ActivityRating from './ActivityRating';
 import RestaurantRating from './RestaurantRating';
 import ActivityForm from './ActivityForm';
 import RestaurantForm from './RestaurantForm';
-import { tripApi, transformTripForFrontend } from '../services/api';
+import { tripApi, ratingApi, transformTripForFrontend } from '../services/api';
 import TabNavigation from './TabNavigation';
 import ActivitiesTab from './ActivitiesTab';
 import FoodTab from './FoodTab';
@@ -63,49 +63,80 @@ const TripDetail = () => {
   const [activityRatings, setActivityRatings] = useState({});
   const [restaurantRatings, setRestaurantRatings] = useState({});
 
-  // Initialize ratings after trip data loads - use API vote counts
+  // Fetch actual participant ratings from API
   useEffect(() => {
-    if (trip && trip.activities) {
-      const initialRatings = {};
-      trip.activities.forEach(activity => {
-        // Use the vote count from API and create simple rating structure
-        const avgRating = Math.min(5, Math.max(0, Math.floor(activity.votes || 0)));
-        initialRatings[activity.id] = {
-          averageRating: avgRating,
-          totalVotes: activity.votes || 0
-        };
-      });
-      setActivityRatings(initialRatings);
-    }
+    const fetchActivityRatings = async () => {
+      if (trip && trip.activities) {
+        console.log('🏠 TripDetail: Fetching activity ratings for trip', trip.id);
+        const ratingsData = {};
+        
+        for (const activity of trip.activities) {
+          try {
+            const ratings = await ratingApi.getActivityRatings(trip.id, activity.id);
+            console.log(`📊 Activity ${activity.id} ratings from API:`, ratings);
+            ratingsData[activity.id] = ratings || {}; // Should be {[participant]: rating}
+          } catch (error) {
+            console.error(`Failed to fetch ratings for activity ${activity.id}:`, error);
+            ratingsData[activity.id] = {}; // Empty ratings as fallback
+          }
+        }
+        
+        console.log('🏠 TripDetail: Setting activity ratings:', ratingsData);
+        setActivityRatings(ratingsData);
+      }
+    };
+    
+    fetchActivityRatings();
   }, [trip]);
 
+  // Fetch actual restaurant ratings from API
   useEffect(() => {
-    if (trip && trip.restaurants) {
-      const initialRatings = {};
-      trip.restaurants.forEach(restaurant => {
-        // Use the vote count from API and create simple rating structure
-        const avgRating = Math.min(5, Math.max(0, Math.floor(restaurant.votes || 0)));
-        initialRatings[restaurant.id] = {
-          averageRating: avgRating,
-          totalVotes: restaurant.votes || 0
-        };
-      });
-      setRestaurantRatings(initialRatings);
-    }
+    const fetchRestaurantRatings = async () => {
+      if (trip && trip.restaurants) {
+        console.log('🏠 TripDetail: Fetching restaurant ratings for trip', trip.id);
+        const ratingsData = {};
+        
+        for (const restaurant of trip.restaurants) {
+          try {
+            const ratings = await ratingApi.getRestaurantRatings(trip.id, restaurant.id);
+            console.log(`📊 Restaurant ${restaurant.id} ratings from API:`, ratings);
+            ratingsData[restaurant.id] = ratings || {}; // Should be {[participant]: rating}
+          } catch (error) {
+            console.error(`Failed to fetch ratings for restaurant ${restaurant.id}:`, error);
+            ratingsData[restaurant.id] = {}; // Empty ratings as fallback
+          }
+        }
+        
+        console.log('🏠 TripDetail: Setting restaurant ratings:', ratingsData);
+        setRestaurantRatings(ratingsData);
+      }
+    };
+    
+    fetchRestaurantRatings();
   }, [trip]);
 
   const handleActivityRatingChange = (activityId, ratings) => {
-    setActivityRatings(prev => ({
-      ...prev,
-      [activityId]: ratings
-    }));
+    console.log('🏠 TripDetail: Activity rating change received', { activityId, ratings });
+    setActivityRatings(prev => {
+      const newState = {
+        ...prev,
+        [activityId]: ratings
+      };
+      console.log('🏠 TripDetail: New activity ratings state', newState);
+      return newState;
+    });
   };
 
   const handleRestaurantRatingChange = (restaurantId, ratings) => {
-    setRestaurantRatings(prev => ({
-      ...prev,
-      [restaurantId]: ratings
-    }));
+    console.log('🏠 TripDetail: Restaurant rating change received', { restaurantId, ratings });
+    setRestaurantRatings(prev => {
+      const newState = {
+        ...prev,
+        [restaurantId]: ratings
+      };
+      console.log('🏠 TripDetail: New restaurant ratings state', newState);
+      return newState;
+    });
   };
 
   const handleAddActivity = async (newActivity) => {

@@ -104,18 +104,24 @@ export const tripApi = {
 export const ratingApi = {
   // Rate an activity
   rateActivity: async (tripId, activityId, participantName, rating) => {
-    return apiRequest(`/trips/${tripId}/activities/${activityId}/rate`, {
+    console.log('📡 API: Rating activity', { tripId, activityId, participantName, rating });
+    const response = await apiRequest(`/trips/${tripId}/activities/${activityId}/rate`, {
       method: 'POST',
       body: JSON.stringify({ participantName, rating }),
     });
+    console.log('✅ API: Activity rating response:', response);
+    return response;
   },
 
   // Rate a restaurant
   rateRestaurant: async (tripId, restaurantId, participantName, rating) => {
-    return apiRequest(`/trips/${tripId}/restaurants/${restaurantId}/rate`, {
+    console.log('📡 API: Rating restaurant', { tripId, restaurantId, participantName, rating });
+    const response = await apiRequest(`/trips/${tripId}/restaurants/${restaurantId}/rate`, {
       method: 'POST',
       body: JSON.stringify({ participantName, rating }),
     });
+    console.log('✅ API: Restaurant rating response:', response);
+    return response;
   },
 
   // Get activity ratings

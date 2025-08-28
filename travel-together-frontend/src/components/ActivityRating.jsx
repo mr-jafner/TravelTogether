@@ -5,21 +5,37 @@ const ActivityRating = ({ activity, participants, currentUser, onRatingChange, t
   // Use parent's ratings state instead of local state
 
   const handleRatingClick = async (participant, rating) => {
+    console.log('🔍 Rating click debug:', {
+      participant, 
+      rating, 
+      currentRatings: ratings,
+      activityId: activity.id,
+      currentUser,
+      tripId
+    });
+    
     // Only allow editing current user's rating
     if (participant !== currentUser) return;
     
     try {
       // Update rating via API
       if (tripId) {
-        await ratingApi.rateActivity(tripId, activity.id, participant, rating);
+        console.log('📡 Making API call to rate activity');
+        const apiResponse = await ratingApi.rateActivity(tripId, activity.id, participant, rating);
+        console.log('✅ API response:', apiResponse);
       }
       
       const newRatings = { ...ratings, [participant]: rating };
+      console.log('🔄 New ratings state:', newRatings);
+      
       if (onRatingChange) {
+        console.log('📤 Calling onRatingChange with:', { activityId: activity.id, newRatings });
         onRatingChange(activity.id, newRatings);
+      } else {
+        console.warn('⚠️ onRatingChange callback is missing');
       }
     } catch (error) {
-      console.error('Failed to update activity rating:', error);
+      console.error('❌ Failed to update activity rating:', error);
       // Could add user-facing error handling here
     }
   };
