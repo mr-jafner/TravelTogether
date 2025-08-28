@@ -29,8 +29,8 @@ const RestaurantRating = ({ restaurant, participants, currentUser, onRatingChang
       console.log('🔄 New restaurant ratings state:', newRatings);
       
       if (onRatingChange) {
-        console.log('📤 Calling restaurant onRatingChange with:', { restaurantId: restaurant.id, newRatings });
-        onRatingChange(restaurant.id, newRatings);
+        console.log('📤 Calling restaurant onRatingChange with newRatings:', newRatings);
+        onRatingChange(newRatings);
       } else {
         console.warn('⚠️ Restaurant onRatingChange callback is missing');
       }

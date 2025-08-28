@@ -29,8 +29,8 @@ const ActivityRating = ({ activity, participants, currentUser, onRatingChange, t
       console.log('🔄 New ratings state:', newRatings);
       
       if (onRatingChange) {
-        console.log('📤 Calling onRatingChange with:', { activityId: activity.id, newRatings });
-        onRatingChange(activity.id, newRatings);
+        console.log('📤 Calling onRatingChange with newRatings:', newRatings);
+        onRatingChange(newRatings);
       } else {
         console.warn('⚠️ onRatingChange callback is missing');
       }
