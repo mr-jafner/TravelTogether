@@ -125,6 +125,10 @@ const TripDetail = () => {
       console.log('🏠 TripDetail: New activity ratings state', newState);
       return newState;
     });
+    
+    // Optional: Force refresh trip data to ensure backend sync
+    // Commented out for now to prevent race conditions
+    // setRefreshKey(prev => prev + 1);
   };
 
   const handleRestaurantRatingChange = (restaurantId, ratings) => {

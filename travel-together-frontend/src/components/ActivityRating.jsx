@@ -40,14 +40,29 @@ const ActivityRating = ({ activity, participants, currentUser, onRatingChange, t
     }
   };
 
-  // Calculate group stats - add safety checks
+  // Calculate group stats - add safety checks and debug logging
   const ratingValues = Object.values(ratings);
+  console.log('📊 ActivityRating calculation debug:', {
+    ratingsObject: ratings,
+    ratingValues,
+    participants,
+    activityName: activity.name
+  });
+  
   const averageRating = ratingValues.length > 0 
     ? ratingValues.reduce((sum, rating) => sum + rating, 0) / ratingValues.length 
     : 0; // Default to 0 if no ratings
   const interestedCount = ratingValues.filter(rating => rating >= 3).length;
   const mustDoCount = ratingValues.filter(rating => rating === 5).length;
   const wontDoCount = ratingValues.filter(rating => rating === 0).length;
+  
+  console.log('📊 ActivityRating calculated stats:', {
+    averageRating,
+    interestedCount,
+    mustDoCount,
+    wontDoCount,
+    activityName: activity.name
+  });
 
   // Enhanced rating configuration with Tailwind colors
   const ratingConfig = {

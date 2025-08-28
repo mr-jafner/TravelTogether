@@ -40,14 +40,29 @@ const RestaurantRating = ({ restaurant, participants, currentUser, onRatingChang
     }
   };
 
-  // Calculate group stats - add safety checks
+  // Calculate group stats - add safety checks and debug logging
   const ratingValues = Object.values(ratings);
+  console.log('📊 RestaurantRating calculation debug:', {
+    ratingsObject: ratings,
+    ratingValues,
+    participants,
+    restaurantName: restaurant.name
+  });
+  
   const averageRating = ratingValues.length > 0 
     ? ratingValues.reduce((sum, rating) => sum + rating, 0) / ratingValues.length 
     : 0; // Default to 0 if no ratings
   const interestedCount = ratingValues.filter(rating => rating >= 3).length;
   const mustEatCount = ratingValues.filter(rating => rating === 5).length;
   const wontEatCount = ratingValues.filter(rating => rating === 0).length;
+  
+  console.log('📊 RestaurantRating calculated stats:', {
+    averageRating,
+    interestedCount,
+    mustEatCount,
+    wontEatCount,
+    restaurantName: restaurant.name
+  });
 
   // Restaurant-focused rating configuration
   const ratingConfig = {
