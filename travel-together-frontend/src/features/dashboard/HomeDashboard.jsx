@@ -93,7 +93,7 @@ function HomeDashboard() {
   // Transform backend trip data to dashboard format
   const transformTripData = (trips) => {
     const transformedTrips = trips.map(trip => {
-      const startDate = trip.start_date ? new Date(trip.start_date) : null;
+      const startDate = trip.startDate ? new Date(trip.startDate) : null;
       const today = new Date();
       const daysAway = startDate ? Math.ceil((startDate - today) / (1000 * 60 * 60 * 24)) : null;
       
@@ -101,15 +101,15 @@ function HomeDashboard() {
         id: trip.id,
         name: trip.name,
         destination: Array.isArray(trip.destinations) ? trip.destinations.join(', ') : trip.destinations || 'No destination set',
-        starts: trip.start_date,
+        starts: trip.startDate,
         daysAway: daysAway > 0 ? daysAway : null,
-        next: trip.start_date ? `Trip starts ${startDate?.toLocaleDateString()}` : 'Set trip dates',
+        next: trip.startDate ? `Trip starts ${startDate?.toLocaleDateString()}` : 'Set trip dates',
         status: { 
           polls: 0, // Could derive from trip activities/restaurants that need votes
           conflicts: 0 // Could derive from overlapping activities or missing info
         },
         myRole: 'organizer', // Could be derived from user relationship to trip
-        draft: !trip.start_date || !trip.end_date || !trip.destinations
+        draft: !trip.startDate || !trip.endDate || !trip.destinations
       };
     });
 
