@@ -35,6 +35,10 @@ app.get('/health', (req, res) => {
 app.use('/api/trips', tripsRouter);
 app.use('/api', ratingsRouter);
 
+// TravelTogether-prefixed API routes for frontend served from /traveltogether/
+app.use('/traveltogether/api/trips', tripsRouter);
+app.use('/traveltogether/api', ratingsRouter);
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);

@@ -134,7 +134,7 @@ function HomeDashboard() {
           }, 500);
         } else {
           // Fetch real trip data from backend
-          const response = await fetch('/api/trips');
+          const response = await fetch('https://jafner.com/traveltogether/api/trips');
           const trips = await response.json();
           const dashboardData = transformTripData(trips);
           setData(dashboardData);
