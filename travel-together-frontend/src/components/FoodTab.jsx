@@ -1,6 +1,5 @@
 import React from 'react';
 import RestaurantRating from './RestaurantRating';
-import RestaurantForm from './RestaurantForm';
 
 const FoodTab = ({ 
   trip, 
@@ -67,15 +66,6 @@ const FoodTab = ({
         </div>
       )}
 
-      {/* Restaurant Form */}
-      {showRestaurantForm && (
-        <div className="mt-6">
-          <RestaurantForm 
-            onAddRestaurant={onAddRestaurant}
-            onCancel={() => setShowRestaurantForm(false)}
-          />
-        </div>
-      )}
     </div>
   );
 };

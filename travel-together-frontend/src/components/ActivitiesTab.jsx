@@ -1,6 +1,5 @@
 import React from 'react';
 import ActivityRating from './ActivityRating';
-import ActivityForm from './ActivityForm';
 
 const ActivitiesTab = ({ 
   trip, 
@@ -67,15 +66,6 @@ const ActivitiesTab = ({
         </div>
       )}
 
-      {/* Activity Form */}
-      {showActivityForm && (
-        <div className="mt-6">
-          <ActivityForm 
-            onAddActivity={onAddActivity}
-            onCancel={() => setShowActivityForm(false)}
-          />
-        </div>
-      )}
     </div>
   );
 };
