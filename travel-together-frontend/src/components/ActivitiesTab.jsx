@@ -7,7 +7,9 @@ const ActivitiesTab = ({
   onActivityRatingChange, 
   showActivityForm, 
   setShowActivityForm, 
-  onAddActivity 
+  onAddActivity,
+  onEditActivity,
+  onDeleteActivity
 }) => {
   return (
     <div>
@@ -44,6 +46,8 @@ const ActivitiesTab = ({
                 onRatingChange={(ratings) => onActivityRatingChange(activity.id, ratings)}
                 currentUser={trip.currentUser}
                 tripId={trip.id}
+                onEditActivity={onEditActivity}
+                onDeleteActivity={onDeleteActivity}
               />
             ))}
           </div>

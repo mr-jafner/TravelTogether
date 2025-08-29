@@ -7,7 +7,9 @@ const FoodTab = ({
   onRestaurantRatingChange, 
   showRestaurantForm, 
   setShowRestaurantForm, 
-  onAddRestaurant 
+  onAddRestaurant,
+  onEditRestaurant,
+  onDeleteRestaurant
 }) => {
   return (
     <div>
@@ -44,6 +46,8 @@ const FoodTab = ({
                 onRatingChange={(ratings) => onRestaurantRatingChange(restaurant.id, ratings)}
                 currentUser={trip.currentUser}
                 tripId={trip.id}
+                onEditRestaurant={onEditRestaurant}
+                onDeleteRestaurant={onDeleteRestaurant}
               />
             ))}
           </div>

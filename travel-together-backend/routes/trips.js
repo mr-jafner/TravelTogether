@@ -354,4 +354,281 @@ router.delete('/:id/restaurants/:restaurantId', async (req, res) => {
   }
 });
 
+// TRAVEL ENDPOINTS
+// GET /api/trips/:id/travel - Get travel information for trip
+router.get('/:id/travel', async (req, res) => {
+  try {
+    const tripId = parseInt(req.params.id);
+    if (isNaN(tripId)) {
+      return res.status(400).json({ error: 'Invalid trip ID' });
+    }
+
+    const travel = await tripModel.getTravelInfo(tripId);
+    res.json(travel);
+  } catch (error) {
+    console.error('Error fetching travel info:', error);
+    res.status(500).json({ error: 'Failed to fetch travel information' });
+  }
+});
+
+// POST /api/trips/:id/travel - Add travel information
+router.post('/:id/travel', async (req, res) => {
+  try {
+    const tripId = parseInt(req.params.id);
+    if (isNaN(tripId)) {
+      return res.status(400).json({ error: 'Invalid trip ID' });
+    }
+
+    const { type, details, fromLocation, toLocation, dateTime, cost, confirmationNumber, notes } = req.body;
+
+    if (!type || !details) {
+      return res.status(400).json({ error: 'Missing required fields: type, details' });
+    }
+
+    const travelId = await tripModel.addTravelInfo(tripId, {
+      type, details, fromLocation, toLocation, dateTime, 
+      cost: cost ? parseFloat(cost) : null, confirmationNumber, notes
+    });
+
+    res.status(201).json({ id: travelId, message: 'Travel information added successfully' });
+  } catch (error) {
+    console.error('Error adding travel info:', error);
+    res.status(500).json({ error: 'Failed to add travel information' });
+  }
+});
+
+// PUT /api/trips/:id/travel/:travelId - Update travel information
+router.put('/:id/travel/:travelId', async (req, res) => {
+  try {
+    const tripId = parseInt(req.params.id);
+    const travelId = parseInt(req.params.travelId);
+    
+    if (isNaN(tripId) || isNaN(travelId)) {
+      return res.status(400).json({ error: 'Invalid trip or travel ID' });
+    }
+
+    const { type, details, fromLocation, toLocation, dateTime, cost, confirmationNumber, notes } = req.body;
+
+    const updated = await tripModel.updateTravelInfo(travelId, {
+      type, details, fromLocation, toLocation, dateTime,
+      cost: cost ? parseFloat(cost) : null, confirmationNumber, notes
+    });
+
+    if (!updated) {
+      return res.status(404).json({ error: 'Travel information not found' });
+    }
+
+    res.json({ message: 'Travel information updated successfully' });
+  } catch (error) {
+    console.error('Error updating travel info:', error);
+    res.status(500).json({ error: 'Failed to update travel information' });
+  }
+});
+
+// DELETE /api/trips/:id/travel/:travelId - Delete travel information
+router.delete('/:id/travel/:travelId', async (req, res) => {
+  try {
+    const tripId = parseInt(req.params.id);
+    const travelId = parseInt(req.params.travelId);
+    
+    if (isNaN(tripId) || isNaN(travelId)) {
+      return res.status(400).json({ error: 'Invalid trip or travel ID' });
+    }
+
+    const deleted = await tripModel.deleteTravelInfo(travelId);
+    if (!deleted) {
+      return res.status(404).json({ error: 'Travel information not found' });
+    }
+
+    res.json({ message: 'Travel information deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting travel info:', error);
+    res.status(500).json({ error: 'Failed to delete travel information' });
+  }
+});
+
+// LODGING ENDPOINTS
+// GET /api/trips/:id/lodging - Get lodging information for trip
+router.get('/:id/lodging', async (req, res) => {
+  try {
+    const tripId = parseInt(req.params.id);
+    if (isNaN(tripId)) {
+      return res.status(400).json({ error: 'Invalid trip ID' });
+    }
+
+    const lodging = await tripModel.getLodgingInfo(tripId);
+    res.json(lodging);
+  } catch (error) {
+    console.error('Error fetching lodging info:', error);
+    res.status(500).json({ error: 'Failed to fetch lodging information' });
+  }
+});
+
+// POST /api/trips/:id/lodging - Add lodging information
+router.post('/:id/lodging', async (req, res) => {
+  try {
+    const tripId = parseInt(req.params.id);
+    if (isNaN(tripId)) {
+      return res.status(400).json({ error: 'Invalid trip ID' });
+    }
+
+    const { name, type, location, checkIn, checkOut, cost, confirmationNumber, contactInfo, wifiInfo, notes } = req.body;
+
+    if (!name || !type || !location) {
+      return res.status(400).json({ error: 'Missing required fields: name, type, location' });
+    }
+
+    const lodgingId = await tripModel.addLodgingInfo(tripId, {
+      name, type, location, checkIn, checkOut,
+      cost: cost ? parseFloat(cost) : null, confirmationNumber, contactInfo, wifiInfo, notes
+    });
+
+    res.status(201).json({ id: lodgingId, message: 'Lodging information added successfully' });
+  } catch (error) {
+    console.error('Error adding lodging info:', error);
+    res.status(500).json({ error: 'Failed to add lodging information' });
+  }
+});
+
+// PUT /api/trips/:id/lodging/:lodgingId - Update lodging information
+router.put('/:id/lodging/:lodgingId', async (req, res) => {
+  try {
+    const tripId = parseInt(req.params.id);
+    const lodgingId = parseInt(req.params.lodgingId);
+    
+    if (isNaN(tripId) || isNaN(lodgingId)) {
+      return res.status(400).json({ error: 'Invalid trip or lodging ID' });
+    }
+
+    const { name, type, location, checkIn, checkOut, cost, confirmationNumber, contactInfo, wifiInfo, notes } = req.body;
+
+    const updated = await tripModel.updateLodgingInfo(lodgingId, {
+      name, type, location, checkIn, checkOut,
+      cost: cost ? parseFloat(cost) : null, confirmationNumber, contactInfo, wifiInfo, notes
+    });
+
+    if (!updated) {
+      return res.status(404).json({ error: 'Lodging information not found' });
+    }
+
+    res.json({ message: 'Lodging information updated successfully' });
+  } catch (error) {
+    console.error('Error updating lodging info:', error);
+    res.status(500).json({ error: 'Failed to update lodging information' });
+  }
+});
+
+// DELETE /api/trips/:id/lodging/:lodgingId - Delete lodging information
+router.delete('/:id/lodging/:lodgingId', async (req, res) => {
+  try {
+    const tripId = parseInt(req.params.id);
+    const lodgingId = parseInt(req.params.lodgingId);
+    
+    if (isNaN(tripId) || isNaN(lodgingId)) {
+      return res.status(400).json({ error: 'Invalid trip or lodging ID' });
+    }
+
+    const deleted = await tripModel.deleteLodgingInfo(lodgingId);
+    if (!deleted) {
+      return res.status(404).json({ error: 'Lodging information not found' });
+    }
+
+    res.json({ message: 'Lodging information deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting lodging info:', error);
+    res.status(500).json({ error: 'Failed to delete lodging information' });
+  }
+});
+
+// LOGISTICS ENDPOINTS  
+// GET /api/trips/:id/logistics - Get logistics information for trip
+router.get('/:id/logistics', async (req, res) => {
+  try {
+    const tripId = parseInt(req.params.id);
+    if (isNaN(tripId)) {
+      return res.status(400).json({ error: 'Invalid trip ID' });
+    }
+
+    const logistics = await tripModel.getLogisticsInfo(tripId);
+    res.json(logistics);
+  } catch (error) {
+    console.error('Error fetching logistics info:', error);
+    res.status(500).json({ error: 'Failed to fetch logistics information' });
+  }
+});
+
+// POST /api/trips/:id/logistics - Add logistics information
+router.post('/:id/logistics', async (req, res) => {
+  try {
+    const tripId = parseInt(req.params.id);
+    if (isNaN(tripId)) {
+      return res.status(400).json({ error: 'Invalid trip ID' });
+    }
+
+    const { category, name, details, additionalInfo } = req.body;
+
+    if (!category || !name) {
+      return res.status(400).json({ error: 'Missing required fields: category, name' });
+    }
+
+    const logisticsId = await tripModel.addLogisticsInfo(tripId, {
+      category, name, details, additionalInfo
+    });
+
+    res.status(201).json({ id: logisticsId, message: 'Logistics information added successfully' });
+  } catch (error) {
+    console.error('Error adding logistics info:', error);
+    res.status(500).json({ error: 'Failed to add logistics information' });
+  }
+});
+
+// PUT /api/trips/:id/logistics/:logisticsId - Update logistics information
+router.put('/:id/logistics/:logisticsId', async (req, res) => {
+  try {
+    const tripId = parseInt(req.params.id);
+    const logisticsId = parseInt(req.params.logisticsId);
+    
+    if (isNaN(tripId) || isNaN(logisticsId)) {
+      return res.status(400).json({ error: 'Invalid trip or logistics ID' });
+    }
+
+    const { category, name, details, additionalInfo } = req.body;
+
+    const updated = await tripModel.updateLogisticsInfo(logisticsId, {
+      category, name, details, additionalInfo
+    });
+
+    if (!updated) {
+      return res.status(404).json({ error: 'Logistics information not found' });
+    }
+
+    res.json({ message: 'Logistics information updated successfully' });
+  } catch (error) {
+    console.error('Error updating logistics info:', error);
+    res.status(500).json({ error: 'Failed to update logistics information' });
+  }
+});
+
+// DELETE /api/trips/:id/logistics/:logisticsId - Delete logistics information
+router.delete('/:id/logistics/:logisticsId', async (req, res) => {
+  try {
+    const tripId = parseInt(req.params.id);
+    const logisticsId = parseInt(req.params.logisticsId);
+    
+    if (isNaN(tripId) || isNaN(logisticsId)) {
+      return res.status(400).json({ error: 'Invalid trip or logistics ID' });
+    }
+
+    const deleted = await tripModel.deleteLogisticsInfo(logisticsId);
+    if (!deleted) {
+      return res.status(404).json({ error: 'Logistics information not found' });
+    }
+
+    res.json({ message: 'Logistics information deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting logistics info:', error);
+    res.status(500).json({ error: 'Failed to delete logistics information' });
+  }
+});
+
 module.exports = router;

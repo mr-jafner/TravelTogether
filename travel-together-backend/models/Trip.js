@@ -136,6 +136,27 @@ class Trip {
         ORDER BY r.created_at
       `, [id]);
       
+      // Get travel information
+      const travel = await this.db.all(`
+        SELECT * FROM trip_travel 
+        WHERE trip_id = ? 
+        ORDER BY created_at
+      `, [id]);
+      
+      // Get lodging information
+      const lodging = await this.db.all(`
+        SELECT * FROM trip_lodging 
+        WHERE trip_id = ? 
+        ORDER BY created_at
+      `, [id]);
+      
+      // Get logistics information
+      const logistics = await this.db.all(`
+        SELECT * FROM trip_logistics 
+        WHERE trip_id = ? 
+        ORDER BY created_at
+      `, [id]);
+      
       return {
         id: trip.id,
         name: trip.name,
@@ -164,6 +185,9 @@ class Trip {
           dietaryOptions: r.dietary_options ? r.dietary_options.split(',') : [],
           votes: r.votes || 0
         })),
+        travel: travel || [],
+        lodging: lodging || [],
+        logistics: logistics || [],
         createdAt: trip.created_at
       };
     } catch (error) {
@@ -374,6 +398,165 @@ class Trip {
       return result.changes > 0;
     } catch (error) {
       throw new Error(`Failed to delete restaurant: ${error.message}`);
+    }
+  }
+
+  // TRAVEL INFORMATION METHODS
+  async getTravelInfo(tripId) {
+    try {
+      const travel = await this.db.all(
+        `SELECT * FROM trip_travel WHERE trip_id = ? ORDER BY date_time ASC`,
+        [tripId]
+      );
+      return travel;
+    } catch (error) {
+      throw new Error(`Failed to get travel info: ${error.message}`);
+    }
+  }
+
+  async addTravelInfo(tripId, travelData) {
+    const { type, details, fromLocation, toLocation, dateTime, cost, confirmationNumber, notes } = travelData;
+    
+    try {
+      const result = await this.db.run(`
+        INSERT INTO trip_travel (trip_id, type, details, from_location, to_location, date_time, cost, confirmation_number, notes)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [tripId, type, details, fromLocation, toLocation, dateTime, cost, confirmationNumber, notes]);
+      
+      return result.id;
+    } catch (error) {
+      throw new Error(`Failed to add travel info: ${error.message}`);
+    }
+  }
+
+  async updateTravelInfo(travelId, travelData) {
+    const { type, details, fromLocation, toLocation, dateTime, cost, confirmationNumber, notes } = travelData;
+    
+    try {
+      const result = await this.db.run(`
+        UPDATE trip_travel 
+        SET type = ?, details = ?, from_location = ?, to_location = ?, date_time = ?, cost = ?, confirmation_number = ?, notes = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `, [type, details, fromLocation, toLocation, dateTime, cost, confirmationNumber, notes, travelId]);
+      
+      return result.changes > 0;
+    } catch (error) {
+      throw new Error(`Failed to update travel info: ${error.message}`);
+    }
+  }
+
+  async deleteTravelInfo(travelId) {
+    try {
+      const result = await this.db.run(`DELETE FROM trip_travel WHERE id = ?`, [travelId]);
+      return result.changes > 0;
+    } catch (error) {
+      throw new Error(`Failed to delete travel info: ${error.message}`);
+    }
+  }
+
+  // LODGING INFORMATION METHODS
+  async getLodgingInfo(tripId) {
+    try {
+      const lodging = await this.db.all(
+        `SELECT * FROM trip_lodging WHERE trip_id = ? ORDER BY check_in ASC`,
+        [tripId]
+      );
+      return lodging;
+    } catch (error) {
+      throw new Error(`Failed to get lodging info: ${error.message}`);
+    }
+  }
+
+  async addLodgingInfo(tripId, lodgingData) {
+    const { name, type, location, checkIn, checkOut, cost, confirmationNumber, contactInfo, wifiInfo, notes } = lodgingData;
+    
+    try {
+      const result = await this.db.run(`
+        INSERT INTO trip_lodging (trip_id, name, type, location, check_in, check_out, cost, confirmation_number, contact_info, wifi_info, notes)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [tripId, name, type, location, checkIn, checkOut, cost, confirmationNumber, contactInfo, wifiInfo, notes]);
+      
+      return result.id;
+    } catch (error) {
+      throw new Error(`Failed to add lodging info: ${error.message}`);
+    }
+  }
+
+  async updateLodgingInfo(lodgingId, lodgingData) {
+    const { name, type, location, checkIn, checkOut, cost, confirmationNumber, contactInfo, wifiInfo, notes } = lodgingData;
+    
+    try {
+      const result = await this.db.run(`
+        UPDATE trip_lodging 
+        SET name = ?, type = ?, location = ?, check_in = ?, check_out = ?, cost = ?, confirmation_number = ?, contact_info = ?, wifi_info = ?, notes = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `, [name, type, location, checkIn, checkOut, cost, confirmationNumber, contactInfo, wifiInfo, notes, lodgingId]);
+      
+      return result.changes > 0;
+    } catch (error) {
+      throw new Error(`Failed to update lodging info: ${error.message}`);
+    }
+  }
+
+  async deleteLodgingInfo(lodgingId) {
+    try {
+      const result = await this.db.run(`DELETE FROM trip_lodging WHERE id = ?`, [lodgingId]);
+      return result.changes > 0;
+    } catch (error) {
+      throw new Error(`Failed to delete lodging info: ${error.message}`);
+    }
+  }
+
+  // LOGISTICS INFORMATION METHODS
+  async getLogisticsInfo(tripId) {
+    try {
+      const logistics = await this.db.all(
+        `SELECT * FROM trip_logistics WHERE trip_id = ? ORDER BY category ASC, name ASC`,
+        [tripId]
+      );
+      return logistics;
+    } catch (error) {
+      throw new Error(`Failed to get logistics info: ${error.message}`);
+    }
+  }
+
+  async addLogisticsInfo(tripId, logisticsData) {
+    const { category, name, details, additionalInfo } = logisticsData;
+    
+    try {
+      const result = await this.db.run(`
+        INSERT INTO trip_logistics (trip_id, category, name, details, additional_info)
+        VALUES (?, ?, ?, ?, ?)
+      `, [tripId, category, name, details, additionalInfo]);
+      
+      return result.id;
+    } catch (error) {
+      throw new Error(`Failed to add logistics info: ${error.message}`);
+    }
+  }
+
+  async updateLogisticsInfo(logisticsId, logisticsData) {
+    const { category, name, details, additionalInfo } = logisticsData;
+    
+    try {
+      const result = await this.db.run(`
+        UPDATE trip_logistics 
+        SET category = ?, name = ?, details = ?, additional_info = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `, [category, name, details, additionalInfo, logisticsId]);
+      
+      return result.changes > 0;
+    } catch (error) {
+      throw new Error(`Failed to update logistics info: ${error.message}`);
+    }
+  }
+
+  async deleteLogisticsInfo(logisticsId) {
+    try {
+      const result = await this.db.run(`DELETE FROM trip_logistics WHERE id = ?`, [logisticsId]);
+      return result.changes > 0;
+    } catch (error) {
+      throw new Error(`Failed to delete logistics info: ${error.message}`);
     }
   }
 }

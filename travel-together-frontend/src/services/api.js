@@ -128,6 +128,81 @@ export const tripApi = {
       method: 'DELETE',
     });
   },
+
+  // Travel endpoints
+  getTravelInfo: async (tripId) => {
+    return apiRequest(`/trips/${tripId}/travel`);
+  },
+
+  addTravelInfo: async (tripId, travelData) => {
+    return apiRequest(`/trips/${tripId}/travel`, {
+      method: 'POST',
+      body: JSON.stringify(travelData),
+    });
+  },
+
+  updateTravelInfo: async (tripId, travelId, travelData) => {
+    return apiRequest(`/trips/${tripId}/travel/${travelId}`, {
+      method: 'PUT',
+      body: JSON.stringify(travelData),
+    });
+  },
+
+  deleteTravelInfo: async (tripId, travelId) => {
+    return apiRequest(`/trips/${tripId}/travel/${travelId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Lodging endpoints
+  getLodgingInfo: async (tripId) => {
+    return apiRequest(`/trips/${tripId}/lodging`);
+  },
+
+  addLodgingInfo: async (tripId, lodgingData) => {
+    return apiRequest(`/trips/${tripId}/lodging`, {
+      method: 'POST',
+      body: JSON.stringify(lodgingData),
+    });
+  },
+
+  updateLodgingInfo: async (tripId, lodgingId, lodgingData) => {
+    return apiRequest(`/trips/${tripId}/lodging/${lodgingId}`, {
+      method: 'PUT',
+      body: JSON.stringify(lodgingData),
+    });
+  },
+
+  deleteLodgingInfo: async (tripId, lodgingId) => {
+    return apiRequest(`/trips/${tripId}/lodging/${lodgingId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Logistics endpoints
+  getLogisticsInfo: async (tripId) => {
+    return apiRequest(`/trips/${tripId}/logistics`);
+  },
+
+  addLogisticsInfo: async (tripId, logisticsData) => {
+    return apiRequest(`/trips/${tripId}/logistics`, {
+      method: 'POST',
+      body: JSON.stringify(logisticsData),
+    });
+  },
+
+  updateLogisticsInfo: async (tripId, logisticsId, logisticsData) => {
+    return apiRequest(`/trips/${tripId}/logistics/${logisticsId}`, {
+      method: 'PUT',
+      body: JSON.stringify(logisticsData),
+    });
+  },
+
+  deleteLogisticsInfo: async (tripId, logisticsId) => {
+    return apiRequest(`/trips/${tripId}/logistics/${logisticsId}`, {
+      method: 'DELETE',
+    });
+  },
 };
 
 // Rating API endpoints

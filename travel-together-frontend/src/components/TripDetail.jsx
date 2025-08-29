@@ -200,6 +200,54 @@ const TripDetail = () => {
     }
   };
 
+  const handleEditActivity = async (activityId, activityData) => {
+    try {
+      setError(null);
+      await tripApi.updateActivity(tripId, activityId, activityData);
+      await fetchTripData(); // Refresh data to show updated activity
+    } catch (error) {
+      console.error('Failed to update activity:', error);
+      setError(`Failed to update activity: ${error.message}`);
+      throw error; // Re-throw to let child component handle UI state
+    }
+  };
+
+  const handleDeleteActivity = async (activityId) => {
+    try {
+      setError(null);
+      await tripApi.deleteActivity(tripId, activityId);
+      await fetchTripData(); // Refresh data to remove deleted activity
+    } catch (error) {
+      console.error('Failed to delete activity:', error);
+      setError(`Failed to delete activity: ${error.message}`);
+      throw error; // Re-throw to let child component handle UI state
+    }
+  };
+
+  const handleEditRestaurant = async (restaurantId, restaurantData) => {
+    try {
+      setError(null);
+      await tripApi.updateRestaurant(tripId, restaurantId, restaurantData);
+      await fetchTripData(); // Refresh data to show updated restaurant
+    } catch (error) {
+      console.error('Failed to update restaurant:', error);
+      setError(`Failed to update restaurant: ${error.message}`);
+      throw error; // Re-throw to let child component handle UI state
+    }
+  };
+
+  const handleDeleteRestaurant = async (restaurantId) => {
+    try {
+      setError(null);
+      await tripApi.deleteRestaurant(tripId, restaurantId);
+      await fetchTripData(); // Refresh data to remove deleted restaurant
+    } catch (error) {
+      console.error('Failed to delete restaurant:', error);
+      setError(`Failed to delete restaurant: ${error.message}`);
+      throw error; // Re-throw to let child component handle UI state
+    }
+  };
+
   // Loading state
   if (loading) {
     return (
@@ -418,19 +466,19 @@ const TripDetail = () => {
               { 
                 id: 'travel', 
                 name: 'Travel', 
-                count: 0,
+                count: trip.travel?.length || 0,
                 icon: '✈️'
               },
               { 
                 id: 'lodging', 
                 name: 'Lodging', 
-                count: 0,
+                count: trip.lodging?.length || 0,
                 icon: '🏨'
               },
               { 
                 id: 'logistics', 
                 name: 'Logistics', 
-                count: 0,
+                count: trip.logistics?.length || 0,
                 icon: '📋'
               },
               { 
@@ -463,6 +511,8 @@ const TripDetail = () => {
                     showActivityForm={showActivityForm}
                     setShowActivityForm={setShowActivityForm}
                     onAddActivity={handleAddActivity}
+                    onEditActivity={handleEditActivity}
+                    onDeleteActivity={handleDeleteActivity}
                   />
                 )}
                 
@@ -474,19 +524,30 @@ const TripDetail = () => {
                     showRestaurantForm={showRestaurantForm}
                     setShowRestaurantForm={setShowRestaurantForm}
                     onAddRestaurant={handleAddRestaurant}
+                    onEditRestaurant={handleEditRestaurant}
+                    onDeleteRestaurant={handleDeleteRestaurant}
                   />
                 )}
                 
                 {activeTab === 'travel' && (
-                  <TravelTab trip={trip} />
+                  <TravelTab 
+                    trip={trip} 
+                    onTravelUpdate={fetchTripData}
+                  />
                 )}
                 
                 {activeTab === 'lodging' && (
-                  <LodgingTab trip={trip} />
+                  <LodgingTab 
+                    trip={trip} 
+                    onLodgingUpdate={fetchTripData}
+                  />
                 )}
                 
                 {activeTab === 'logistics' && (
-                  <LogisticsTab trip={trip} />
+                  <LogisticsTab 
+                    trip={trip}
+                    onLogisticsUpdate={fetchTripData}
+                  />
                 )}
                 
                 {activeTab === 'itinerary' && (
