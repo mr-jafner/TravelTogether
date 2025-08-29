@@ -8,17 +8,7 @@ import Header from './components/Header';
 import TripList from './components/TripList'
 import TripDetail from './components/TripDetail';
 import TripCreation from './components/TripCreation';
-
-// Temporary placeholder components (you'll build these later)
-function Dashboard() {
-  return (
-    <div style={{ padding: '2rem' }}>
-      <h1>Dashboard</h1>
-      <p>Welcome to TravelTogether! This is your main dashboard.</p>
-      <p>You can add trip overviews, recent activity, and quick actions here.</p>
-    </div>
-  );
-}
+import HomeDashboard from './features/dashboard/HomeDashboard';
 
 function MyTrips() {
   const navigate = useNavigate();
@@ -117,7 +107,7 @@ function App() {
       <Header />
       <main>
         <Routes>
-          <Route path="/" element={<Dashboard />} />
+          <Route path="/" element={<HomeDashboard />} />
           <Route path="/trips" element={<MyTrips />} />
           <Route path="/trips/create" element={<TripCreation />} />
           <Route path="/trips/:tripId" element={<TripDetail />} />
