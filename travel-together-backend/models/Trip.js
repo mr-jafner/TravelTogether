@@ -305,6 +305,77 @@ class Trip {
       throw new Error(`Failed to rate restaurant: ${error.message}`);
     }
   }
+
+  // Update activity
+  async updateActivity(activityId, activityData) {
+    const { name, category, location, cost, duration } = activityData;
+    
+    try {
+      const result = await this.db.run(`
+        UPDATE activities 
+        SET name = ?, category = ?, location = ?, cost = ?, duration = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `, [name, category, location, cost, duration, activityId]);
+      
+      return result.changes > 0;
+    } catch (error) {
+      throw new Error(`Failed to update activity: ${error.message}`);
+    }
+  }
+
+  // Delete activity
+  async deleteActivity(activityId) {
+    try {
+      const result = await this.db.run(`DELETE FROM activities WHERE id = ?`, [activityId]);
+      return result.changes > 0;
+    } catch (error) {
+      throw new Error(`Failed to delete activity: ${error.message}`);
+    }
+  }
+
+  // Update restaurant
+  async updateRestaurant(restaurantId, restaurantData) {
+    const { name, cuisine, location, cost, priceRange, groupCapacity, dietaryOptions } = restaurantData;
+    
+    try {
+      // Update restaurant basic info
+      const result = await this.db.run(`
+        UPDATE restaurants 
+        SET name = ?, cuisine = ?, location = ?, cost = ?, price_range = ?, group_capacity = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `, [name, cuisine, location, cost, priceRange, groupCapacity, restaurantId]);
+      
+      if (result.changes === 0) {
+        return false;
+      }
+
+      // Update dietary options - delete old ones and insert new ones
+      await this.db.run(`DELETE FROM restaurant_dietary_options WHERE restaurant_id = ?`, [restaurantId]);
+      
+      if (dietaryOptions && dietaryOptions.length > 0) {
+        for (const option of dietaryOptions) {
+          await this.db.run(`
+            INSERT INTO restaurant_dietary_options (restaurant_id, dietary_option)
+            VALUES (?, ?)
+          `, [restaurantId, option]);
+        }
+      }
+      
+      return true;
+    } catch (error) {
+      throw new Error(`Failed to update restaurant: ${error.message}`);
+    }
+  }
+
+  // Delete restaurant
+  async deleteRestaurant(restaurantId) {
+    try {
+      const result = await this.db.run(`DELETE FROM restaurants WHERE id = ?`, [restaurantId]);
+      return result.changes > 0;
+    } catch (error) {
+      throw new Error(`Failed to delete restaurant: ${error.message}`);
+    }
+  }
 }
 
 module.exports = Trip;

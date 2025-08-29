@@ -93,6 +93,55 @@ CREATE TABLE IF NOT EXISTS restaurant_ratings (
     UNIQUE(restaurant_id, participant_id) -- One rating per participant per restaurant
 );
 
+-- Travel information table - Transportation details
+CREATE TABLE IF NOT EXISTS trip_travel (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    trip_id INTEGER NOT NULL,
+    type TEXT NOT NULL, -- flight, train, bus, car, etc.
+    details TEXT NOT NULL, -- flight number, departure time, etc.
+    from_location TEXT,
+    to_location TEXT,
+    date_time DATETIME,
+    cost DECIMAL(10,2),
+    confirmation_number TEXT,
+    notes TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (trip_id) REFERENCES trips (id) ON DELETE CASCADE
+);
+
+-- Lodging information table - Accommodation details
+CREATE TABLE IF NOT EXISTS trip_lodging (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    trip_id INTEGER NOT NULL,
+    name TEXT NOT NULL, -- hotel name, airbnb address, etc.
+    type TEXT NOT NULL, -- hotel, airbnb, hostel, camping, etc.
+    location TEXT NOT NULL,
+    check_in DATE,
+    check_out DATE,
+    cost DECIMAL(10,2),
+    confirmation_number TEXT,
+    contact_info TEXT, -- phone, email, etc.
+    wifi_info TEXT,
+    notes TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (trip_id) REFERENCES trips (id) ON DELETE CASCADE
+);
+
+-- Trip logistics table - WiFi, contacts, documents, etc.
+CREATE TABLE IF NOT EXISTS trip_logistics (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    trip_id INTEGER NOT NULL,
+    category TEXT NOT NULL, -- wifi, emergency_contact, document, important_number
+    name TEXT NOT NULL, -- network name, contact name, document name, etc.
+    details TEXT, -- password, phone, document number, etc.
+    additional_info TEXT, -- extra details, notes, etc.
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (trip_id) REFERENCES trips (id) ON DELETE CASCADE
+);
+
 -- Indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_trip_destinations_trip_id ON trip_destinations (trip_id);
 CREATE INDEX IF NOT EXISTS idx_participants_trip_id ON participants (trip_id);
@@ -101,6 +150,10 @@ CREATE INDEX IF NOT EXISTS idx_restaurants_trip_id ON restaurants (trip_id);
 CREATE INDEX IF NOT EXISTS idx_activity_ratings_activity_id ON activity_ratings (activity_id);
 CREATE INDEX IF NOT EXISTS idx_restaurant_ratings_restaurant_id ON restaurant_ratings (restaurant_id);
 CREATE INDEX IF NOT EXISTS idx_restaurant_dietary_options_restaurant_id ON restaurant_dietary_options (restaurant_id);
+CREATE INDEX IF NOT EXISTS idx_trip_travel_trip_id ON trip_travel (trip_id);
+CREATE INDEX IF NOT EXISTS idx_trip_lodging_trip_id ON trip_lodging (trip_id);
+CREATE INDEX IF NOT EXISTS idx_trip_logistics_trip_id ON trip_logistics (trip_id);
+CREATE INDEX IF NOT EXISTS idx_trip_logistics_category ON trip_logistics (category);
 
 -- Views for easier querying
 

@@ -226,4 +226,132 @@ router.post('/:id/restaurants', async (req, res) => {
   }
 });
 
+// PUT /api/trips/:id/activities/:activityId - Update activity
+router.put('/:id/activities/:activityId', async (req, res) => {
+  try {
+    const tripId = parseInt(req.params.id);
+    const activityId = parseInt(req.params.activityId);
+    
+    if (isNaN(tripId) || isNaN(activityId)) {
+      return res.status(400).json({ error: 'Invalid trip or activity ID' });
+    }
+
+    const { name, category, location, cost, duration } = req.body;
+
+    // Check if trip and activity exist
+    const existingTrip = await tripModel.getById(tripId);
+    if (!existingTrip) {
+      return res.status(404).json({ error: 'Trip not found' });
+    }
+
+    const updated = await tripModel.updateActivity(activityId, {
+      name, category, location, 
+      cost: cost ? parseFloat(cost) : null, 
+      duration
+    });
+
+    if (!updated) {
+      return res.status(404).json({ error: 'Activity not found' });
+    }
+
+    res.json({ message: 'Activity updated successfully' });
+  } catch (error) {
+    console.error('Error updating activity:', error);
+    res.status(500).json({ error: 'Failed to update activity' });
+  }
+});
+
+// DELETE /api/trips/:id/activities/:activityId - Delete activity
+router.delete('/:id/activities/:activityId', async (req, res) => {
+  try {
+    const tripId = parseInt(req.params.id);
+    const activityId = parseInt(req.params.activityId);
+    
+    if (isNaN(tripId) || isNaN(activityId)) {
+      return res.status(400).json({ error: 'Invalid trip or activity ID' });
+    }
+
+    // Check if trip exists
+    const existingTrip = await tripModel.getById(tripId);
+    if (!existingTrip) {
+      return res.status(404).json({ error: 'Trip not found' });
+    }
+
+    const deleted = await tripModel.deleteActivity(activityId);
+    if (!deleted) {
+      return res.status(404).json({ error: 'Activity not found' });
+    }
+
+    res.json({ message: 'Activity deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting activity:', error);
+    res.status(500).json({ error: 'Failed to delete activity' });
+  }
+});
+
+// PUT /api/trips/:id/restaurants/:restaurantId - Update restaurant
+router.put('/:id/restaurants/:restaurantId', async (req, res) => {
+  try {
+    const tripId = parseInt(req.params.id);
+    const restaurantId = parseInt(req.params.restaurantId);
+    
+    if (isNaN(tripId) || isNaN(restaurantId)) {
+      return res.status(400).json({ error: 'Invalid trip or restaurant ID' });
+    }
+
+    const { name, cuisine, location, cost, priceRange, groupCapacity, dietaryOptions } = req.body;
+
+    // Check if trip exists
+    const existingTrip = await tripModel.getById(tripId);
+    if (!existingTrip) {
+      return res.status(404).json({ error: 'Trip not found' });
+    }
+
+    const updated = await tripModel.updateRestaurant(restaurantId, {
+      name, cuisine, location,
+      cost: cost ? parseFloat(cost) : null,
+      priceRange,
+      groupCapacity: groupCapacity ? parseInt(groupCapacity) : null,
+      dietaryOptions: dietaryOptions || []
+    });
+
+    if (!updated) {
+      return res.status(404).json({ error: 'Restaurant not found' });
+    }
+
+    res.json({ message: 'Restaurant updated successfully' });
+  } catch (error) {
+    console.error('Error updating restaurant:', error);
+    res.status(500).json({ error: 'Failed to update restaurant' });
+  }
+});
+
+// DELETE /api/trips/:id/restaurants/:restaurantId - Delete restaurant
+router.delete('/:id/restaurants/:restaurantId', async (req, res) => {
+  try {
+    const tripId = parseInt(req.params.id);
+    const restaurantId = parseInt(req.params.restaurantId);
+    
+    if (isNaN(tripId) || isNaN(restaurantId)) {
+      return res.status(400).json({ error: 'Invalid trip or restaurant ID' });
+    }
+
+    // Check if trip exists
+    const existingTrip = await tripModel.getById(tripId);
+    if (!existingTrip) {
+      return res.status(404).json({ error: 'Trip not found' });
+    }
+
+    const deleted = await tripModel.deleteRestaurant(restaurantId);
+    if (!deleted) {
+      return res.status(404).json({ error: 'Restaurant not found' });
+    }
+
+    res.json({ message: 'Restaurant deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting restaurant:', error);
+    res.status(500).json({ error: 'Failed to delete restaurant' });
+  }
+});
+
 module.exports = router;

@@ -98,6 +98,36 @@ export const tripApi = {
       body: JSON.stringify(restaurantData),
     });
   },
+
+  // Update activity
+  updateActivity: async (tripId, activityId, activityData) => {
+    return apiRequest(`/trips/${tripId}/activities/${activityId}`, {
+      method: 'PUT',
+      body: JSON.stringify(activityData),
+    });
+  },
+
+  // Delete activity
+  deleteActivity: async (tripId, activityId) => {
+    return apiRequest(`/trips/${tripId}/activities/${activityId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Update restaurant
+  updateRestaurant: async (tripId, restaurantId, restaurantData) => {
+    return apiRequest(`/trips/${tripId}/restaurants/${restaurantId}`, {
+      method: 'PUT',
+      body: JSON.stringify(restaurantData),
+    });
+  },
+
+  // Delete restaurant
+  deleteRestaurant: async (tripId, restaurantId) => {
+    return apiRequest(`/trips/${tripId}/restaurants/${restaurantId}`, {
+      method: 'DELETE',
+    });
+  },
 };
 
 // Rating API endpoints
