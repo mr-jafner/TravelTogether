@@ -19,7 +19,13 @@
 
 ## 🔄 **Medium Priority Features**
 
-### 3. **Interactive Trip Map Integration**
+### 3. **Itinerary Tab/Function Implementation**
+**Problem**: Need a comprehensive itinerary view that combines activities, restaurants, and travel into a timeline  
+**Plan**: TBD - create plan in `/ref/plans/itinerary_tab.md`  
+**Estimated Effort**: 2-3 sessions  
+**Key Features**: Day-by-day timeline, drag-and-drop scheduling, integration with existing activities/restaurants, time conflict detection, export functionality
+
+### 4. **Interactive Trip Map Integration**
 **Problem**: Need visual itinerary with map overlay showing activities/restaurants  
 **Plan**: TBD - create plan in `/ref/plans/map_integration.md`  
 **Estimated Effort**: 1-2 sessions  
