@@ -17,8 +17,41 @@ const ActivitiesTab = ({
         <svg className="w-7 h-7 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
         </svg>
-        Activities ({trip.activities?.length || 0}) - Rate 0-5
+        Activities ({trip.activities?.length || 0})
       </h3>
+      
+      {/* Rating Scale Reference */}
+      <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-lg">
+        <div className="text-center">
+          <div className="text-sm font-semibold text-gray-700 mb-2">Rating Scale</div>
+          <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 text-xs">
+            <span className="flex items-center px-2 py-1 bg-red-100 text-red-700 rounded-full">
+              <span className="w-4 h-4 bg-red-500 rounded text-white text-xs flex items-center justify-center mr-1 font-bold">0</span>
+              Won't do
+            </span>
+            <span className="flex items-center px-2 py-1 bg-orange-100 text-orange-700 rounded-full">
+              <span className="w-4 h-4 bg-orange-500 rounded text-white text-xs flex items-center justify-center mr-1 font-bold">1</span>
+              Don't want
+            </span>
+            <span className="flex items-center px-2 py-1 bg-gray-100 text-gray-700 rounded-full">
+              <span className="w-4 h-4 bg-gray-500 rounded text-white text-xs flex items-center justify-center mr-1 font-bold">2</span>
+              Indifferent
+            </span>
+            <span className="flex items-center px-2 py-1 bg-cyan-100 text-cyan-700 rounded-full">
+              <span className="w-4 h-4 bg-cyan-500 rounded text-white text-xs flex items-center justify-center mr-1 font-bold">3</span>
+              Interested
+            </span>
+            <span className="flex items-center px-2 py-1 bg-teal-100 text-teal-700 rounded-full">
+              <span className="w-4 h-4 bg-teal-500 rounded text-white text-xs flex items-center justify-center mr-1 font-bold">4</span>
+              Really want
+            </span>
+            <span className="flex items-center px-2 py-1 bg-amber-100 text-amber-700 rounded-full">
+              <span className="w-4 h-4 bg-amber-500 rounded text-white text-xs flex items-center justify-center mr-1 font-bold">5</span>
+              Must do
+            </span>
+          </div>
+        </div>
+      </div>
       
       {trip.activities && trip.activities.length > 0 ? (
         <div className="space-y-4">

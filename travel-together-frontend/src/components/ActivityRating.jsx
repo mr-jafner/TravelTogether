@@ -67,8 +67,17 @@ const ActivityRating = ({ activity, participants, currentUser, onRatingChange, t
     }
   };
 
+  // Helper function to get proper initials (e.g., "Chris Taylor" -> "CT")
+  const getInitials = (name) => {
+    if (!name) return '?';
+    const words = name.trim().split(/\s+/);
+    if (words.length === 1) return words[0].charAt(0).toUpperCase();
+    return (words[0].charAt(0) + words[words.length - 1].charAt(0)).toUpperCase();
+  };
+
+  
   // Calculate group stats - add safety checks
-  const ratingValues = Object.values(ratings);
+  const ratingValues = Object.values(ratings).filter(rating => rating !== undefined && rating !== null);
   const averageRating = ratingValues.length > 0 
     ? ratingValues.reduce((sum, rating) => sum + rating, 0) / ratingValues.length 
     : 0; // Default to 0 if no ratings
@@ -130,7 +139,7 @@ const ActivityRating = ({ activity, participants, currentUser, onRatingChange, t
 
   // Safely get config with fallback to neutral rating
   const roundedRating = Math.round(averageRating);
-  const currentConfig = ratingConfig[roundedRating] || ratingConfig[2]; // Fallback to "Maybe" (rating 2)
+  const currentConfig = ratingConfig[roundedRating] || ratingConfig[2]; // Fallback to "Indifferent" (rating 2)
 
   return (
     <div className={`border rounded-lg p-4 sm:p-6 mb-4 transition-all duration-300 hover:shadow-md ${currentConfig.bgColor} ${currentConfig.borderColor}`}>
@@ -286,87 +295,98 @@ const ActivityRating = ({ activity, participants, currentUser, onRatingChange, t
       {/* Individual Ratings */}
       <div>
         <div className="text-sm font-semibold text-gray-700 mb-3">Individual Ratings:</div>
-        <div className="space-y-2 sm:space-y-3">
-          {participants.map(participant => {
-            const participantRating = ratings[participant];
-            const participantConfig = ratingConfig[participantRating] || ratingConfig[2]; // Fallback to "Maybe"
-            const isCurrentUser = participant === currentUser;
-            
-            return (
-              <div key={participant} className={`
-                flex flex-col sm:flex-row sm:items-center sm:justify-between 
-                p-3 rounded-lg backdrop-blur-sm space-y-2 sm:space-y-0
-                ${isCurrentUser 
-                  ? 'bg-blue-50 border-2 border-blue-200 bg-opacity-90' 
-                  : 'bg-white bg-opacity-70'
-                }
-              `}>
-                <span className={`
-                  text-sm font-medium text-center sm:text-left
-                  ${isCurrentUser ? 'text-blue-900' : 'text-gray-900'}
-                `}>
-                  {isCurrentUser ? `${participant} (You)` : participant}
-                </span>
-                <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-1 ml-0 sm:ml-4">
-                  <div className="flex items-center gap-1 flex-wrap justify-center sm:justify-start">
+        
+        {/* Current User - Full Rating Scale */}
+        {participants.filter(p => p === currentUser).map(participant => {
+          const participantRating = ratings[participant];
+          const participantConfig = participantRating !== undefined && participantRating !== null 
+            ? ratingConfig[participantRating] || ratingConfig[2] 
+            : ratingConfig[2];
+          
+          return (
+            <div key={participant} className="bg-blue-50 border-2 border-blue-200 bg-opacity-90 p-3 rounded-lg backdrop-blur-sm mb-4">
+              <span className="text-sm font-medium text-blue-900 mb-2 block">
+                {participant} (You)
+              </span>
+              <div className="w-full">
+                <div className="flex items-center gap-1 flex-wrap justify-center sm:justify-between mb-2">
                   {[0, 1, 2, 3, 4, 5].map(rating => {
                     const config = ratingConfig[rating];
                     const isActive = participantRating === rating;
-                    const canEdit = isCurrentUser;
                     
                     return (
                       <button
                         key={rating}
                         onClick={() => handleRatingClick(participant, rating)}
-                        disabled={!canEdit}
                         className={`
-                          w-10 h-10 sm:w-8 sm:h-8 
-                          text-sm sm:text-xs 
+                          flex-1 h-12 sm:h-10 
+                          text-base sm:text-sm 
                           border-2 rounded-md font-bold
-                          min-w-[44px] min-h-[44px] sm:min-w-[32px] sm:min-h-[32px]
-                          mx-0.5 sm:mx-0
+                          min-h-[48px] sm:min-h-[40px]
+                          mx-1 sm:mx-0.5
                           transition-all duration-200 ease-in-out
-                          ${canEdit ? 'transform hover:scale-110 active:scale-95 cursor-pointer' : 'cursor-not-allowed opacity-75'}
+                          transform hover:scale-105 active:scale-95 cursor-pointer
+                          touch-manipulation
                           ${isActive 
                             ? config.buttonActive + ' shadow-md' 
-                            : canEdit
-                              ? 'bg-white ' + config.buttonInactive
-                              : 'bg-gray-100 border-gray-300 text-gray-500'
+                            : 'bg-white ' + config.buttonInactive
                           }
                         `}
-                        title={canEdit ? config.label : `${participant}'s rating: ${config.label}`}
+                        title={config.label}
                       >
                         {rating}
                       </button>
                     );
                   })}
-                  </div>
-                  <span className={`text-center sm:text-left ml-0 sm:ml-3 text-xs font-semibold ${
-                    isCurrentUser ? 'text-blue-700' : participantConfig.textColor
-                  }`}>
-                    {participantConfig.label}
-                  </span>
+                </div>
+                <div className="text-center sm:text-left text-xs font-semibold text-blue-700">
+                  {participantConfig.label}
                 </div>
               </div>
-            );
-          })}
-        </div>
+            </div>
+          );
+        })}
+        
+        {/* Other Participants - Compact Grid */}
+        {(() => {
+          const otherParticipants = participants.filter(p => p !== currentUser);
+          if (otherParticipants.length === 0) return null;
+          
+          return (
+            <div className="bg-white bg-opacity-70 p-3 rounded-lg">
+              <div className="text-xs font-medium text-gray-700 mb-2">Other Participants:</div>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                {otherParticipants.map(participant => {
+                  const participantRating = ratings[participant];
+                  const participantConfig = participantRating !== undefined && participantRating !== null 
+                    ? ratingConfig[participantRating] || ratingConfig[2] 
+                    : ratingConfig[2];
+                  
+                  return (
+                    <div key={participant} className="flex flex-col items-center gap-1 p-2 rounded-md hover:bg-gray-50">
+                      <span className={`w-8 h-8 rounded-full text-xs font-bold flex items-center justify-center ${
+                        participantRating !== undefined && participantRating !== null
+                          ? participantConfig.buttonActive
+                          : 'bg-gray-100 text-gray-500'
+                      }`}>
+                        {getInitials(participant)}
+                      </span>
+                      <span className={`text-xs font-bold ${
+                        participantRating !== undefined && participantRating !== null
+                          ? participantConfig.textColor
+                          : 'text-gray-400'
+                      }`}>
+                        {participantRating !== undefined && participantRating !== null ? participantRating : '-'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
-      {/* Rating Scale Legend */}
-      <div className="mt-4 pt-4 border-t border-gray-200">
-        <div className="text-xs sm:text-xs text-gray-500 text-center">
-          <div className="font-medium mb-1 sm:mb-0 sm:inline">Rating Scale:</div>
-          <div className="flex flex-wrap justify-center gap-x-2 gap-y-1 sm:inline">
-            <span>0=Won't do</span>
-            <span>1=Don't want</span>
-            <span>2=Indifferent</span>
-            <span>3=Interested</span>
-            <span>4=Really want</span>
-            <span>5=Must do</span>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
