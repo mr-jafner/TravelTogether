@@ -193,7 +193,7 @@ const TripDetail = () => {
       setError(null);
       await tripApi.deleteTrip(tripId);
       // Redirect to trip list after successful deletion
-      window.location.href = '/trips';
+      window.location.href = '/traveltogether/trips';
     } catch (error) {
       console.error('Failed to delete trip:', error);
       setError(`Failed to delete trip: ${error.message}`);
