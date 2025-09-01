@@ -562,21 +562,7 @@ const TripDetail = () => {
                   />
                 )}
                 
-                {/* Activity Form */}
-                {showActivityForm && (
-                  <ActivityForm 
-                    onAddActivity={handleAddActivity}
-                    onCancel={() => setShowActivityForm(false)}
-                  />
-                )}
 
-                {/* Restaurant Form */}
-                {showRestaurantForm && (
-                  <RestaurantForm 
-                    onAddRestaurant={handleAddRestaurant}
-                    onCancel={() => setShowRestaurantForm(false)}
-                  />
-                )}
               </>
             );
           })()}

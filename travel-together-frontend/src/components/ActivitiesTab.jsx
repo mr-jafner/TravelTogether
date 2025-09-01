@@ -1,5 +1,6 @@
 import React from 'react';
 import ActivityRating from './ActivityRating';
+import ActivityForm from './ActivityForm';
 
 const ActivitiesTab = ({ 
   trip, 
@@ -53,21 +54,35 @@ const ActivitiesTab = ({
         </div>
       </div>
       
+      {/* Add Activity Button - Always at top */}
+      <div className="mb-6">
+        <button 
+          onClick={() => setShowActivityForm(true)}
+          className={`${
+            trip.activities && trip.activities.length > 0 
+              ? 'bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-2 text-sm border border-blue-300' 
+              : 'bg-blue-500 hover:bg-blue-600 text-white px-4 py-2'
+          } font-medium rounded-lg transition-colors flex items-center`}
+        >
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          {trip.activities && trip.activities.length > 0 ? 'Add Another Activity' : 'Add First Activity'}
+        </button>
+      </div>
+      
+      {/* Activity Form */}
+      {showActivityForm && (
+        <div className="mb-6">
+          <ActivityForm 
+            onAddActivity={onAddActivity}
+            onCancel={() => setShowActivityForm(false)}
+          />
+        </div>
+      )}
+      
       {trip.activities && trip.activities.length > 0 ? (
         <div className="space-y-4">
-          {/* Add New Activity Button */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <button 
-              onClick={() => setShowActivityForm(true)}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              Add Another Activity
-            </button>
-          </div>
-
           {/* Activities List */}
           <div className="space-y-6">
             {trip.activities.map(activity => (
@@ -88,18 +103,12 @@ const ActivitiesTab = ({
       ) : (
         <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
           <svg className="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
           </svg>
           <h4 className="text-lg font-semibold text-gray-700 mb-2">No Activities Yet</h4>
-          <p className="text-gray-500 mb-4">
+          <p className="text-gray-500">
             Start adding activities you'd like to do on this trip. Your group can then vote on their preferences!
           </p>
-          <button 
-            onClick={() => setShowActivityForm(true)}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-          >
-            Add First Activity
-          </button>
         </div>
       )}
 

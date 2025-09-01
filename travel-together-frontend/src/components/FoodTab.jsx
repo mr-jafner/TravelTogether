@@ -1,5 +1,6 @@
 import React from 'react';
 import RestaurantRating from './RestaurantRating';
+import RestaurantForm from './RestaurantForm';
 
 const FoodTab = ({ 
   trip, 
@@ -53,21 +54,35 @@ const FoodTab = ({
         </div>
       </div>
       
+      {/* Add Restaurant Button - Always at top */}
+      <div className="mb-6">
+        <button 
+          onClick={() => setShowRestaurantForm(true)}
+          className={`${
+            trip.restaurants && trip.restaurants.length > 0 
+              ? 'bg-orange-100 hover:bg-orange-200 text-orange-700 px-3 py-2 text-sm border border-orange-300' 
+              : 'bg-orange-500 hover:bg-orange-600 text-white px-4 py-2'
+          } font-medium rounded-lg transition-colors flex items-center`}
+        >
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          {trip.restaurants && trip.restaurants.length > 0 ? 'Add Another Restaurant' : 'Add First Restaurant'}
+        </button>
+      </div>
+      
+      {/* Restaurant Form */}
+      {showRestaurantForm && (
+        <div className="mb-6">
+          <RestaurantForm 
+            onAddRestaurant={onAddRestaurant}
+            onCancel={() => setShowRestaurantForm(false)}
+          />
+        </div>
+      )}
+      
       {trip.restaurants && trip.restaurants.length > 0 ? (
         <div className="space-y-4">
-          {/* Add New Restaurant Button */}
-          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-            <button 
-              onClick={() => setShowRestaurantForm(true)}
-              className="bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center"
-            >
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              Add Another Restaurant
-            </button>
-          </div>
-
           {/* Restaurants List */}
           <div className="space-y-6">
             {trip.restaurants.map(restaurant => (
@@ -88,18 +103,12 @@ const FoodTab = ({
       ) : (
         <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
           <svg className="mx-auto h-16 w-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
           </svg>
           <h4 className="text-lg font-semibold text-gray-700 mb-2">No Restaurants Yet</h4>
-          <p className="text-gray-500 mb-4">
+          <p className="text-gray-500">
             Add restaurants you'd like to try on this trip. Your group can vote on their dining preferences!
           </p>
-          <button 
-            onClick={() => setShowRestaurantForm(true)}
-            className="bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-          >
-            Add First Restaurant
-          </button>
         </div>
       )}
 

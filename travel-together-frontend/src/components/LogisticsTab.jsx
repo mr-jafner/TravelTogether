@@ -177,14 +177,49 @@ const LogisticsTab = ({ trip, onLogisticsUpdate }) => {
       <div className="mb-6">
         <button 
           onClick={() => setShowAddForm(true)}
-          className="bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center"
+          className={`${
+            logisticsItems.length > 0 
+              ? 'bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-3 py-2 text-sm border border-indigo-300' 
+              : 'bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2'
+          } font-medium rounded-lg transition-colors flex items-center`}
         >
-          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
-          Add Logistics Item
+          {logisticsItems.length > 0 ? 'Add More Info' : 'Add Logistics Item'}
         </button>
       </div>
+
+      {/* Add Logistics Item Form */}
+      {showAddForm && (
+        <div className="mb-6 bg-indigo-50 border border-indigo-200 rounded-lg p-6">
+          <h4 className="text-lg font-semibold text-indigo-900 mb-4">Add Logistics Item</h4>
+          <form onSubmit={(e) => { e.preventDefault(); handleAddLogisticsItem(); }} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+              <select value={newLogisticsItem.type} onChange={(e) => setNewLogisticsItem({ ...newLogisticsItem, type: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                {logisticsTypes.map(type => <option key={type} value={type}>{type.charAt(0).toUpperCase() + type.slice(1)}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Details</label>
+              <input type="text" value={newLogisticsItem.details} onChange={(e) => setNewLogisticsItem({ ...newLogisticsItem, details: e.target.value })} placeholder="Enter details..." className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+              <textarea value={newLogisticsItem.notes} onChange={(e) => setNewLogisticsItem({ ...newLogisticsItem, notes: e.target.value })} placeholder="Additional notes..." rows="3" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+            </div>
+            <div className="flex gap-3">
+              <button type="submit" disabled={loading} className="bg-indigo-500 hover:bg-indigo-600 disabled:bg-indigo-300 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+                {loading ? 'Adding...' : 'Add Item'}
+              </button>
+              <button type="button" onClick={() => setShowAddForm(false)} className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {/* Logistics Items */}
       <div className="space-y-4">
@@ -315,77 +350,6 @@ const LogisticsTab = ({ trip, onLogisticsUpdate }) => {
         )}
       </div>
 
-      {/* Add Logistics Item Form */}
-      {showAddForm && (
-        <div className="mt-6 bg-indigo-50 border border-indigo-200 rounded-lg p-6">
-          <h4 className="text-lg font-semibold text-indigo-900 mb-4">Add Logistics Item</h4>
-          
-          <form onSubmit={(e) => { e.preventDefault(); handleAddLogisticsItem(); }} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Type
-                </label>
-                <select
-                  value={newLogisticsItem.type}
-                  onChange={(e) => setNewLogisticsItem({ ...newLogisticsItem, type: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                >
-                  {logisticsTypes.map(type => (
-                    <option key={type} value={type}>
-                      {type.charAt(0).toUpperCase() + type.slice(1).replace('-', ' ')}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Details
-                </label>
-                <input
-                  type="text"
-                  value={newLogisticsItem.details}
-                  onChange={(e) => setNewLogisticsItem({ ...newLogisticsItem, details: e.target.value })}
-                  placeholder="e.g., Emergency contact, WiFi password, etc."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  required
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Notes
-              </label>
-              <textarea
-                value={newLogisticsItem.notes}
-                onChange={(e) => setNewLogisticsItem({ ...newLogisticsItem, notes: e.target.value })}
-                placeholder="Additional notes or information"
-                rows="3"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              />
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                type="submit"
-                disabled={loading}
-                className="bg-indigo-500 hover:bg-indigo-600 disabled:bg-indigo-300 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-              >
-                {loading ? 'Adding...' : 'Add Item'}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowAddForm(false)}
-                className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
     </div>
   );
 };

@@ -222,14 +222,84 @@ const LodgingTab = ({ trip, onLodgingUpdate }) => {
       <div className="mb-6">
         <button 
           onClick={() => setShowAddForm(true)}
-          className="bg-purple-500 hover:bg-purple-600 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center"
+          className={`${
+            accommodations.length > 0 
+              ? 'bg-purple-100 hover:bg-purple-200 text-purple-700 px-3 py-2 text-sm border border-purple-300' 
+              : 'bg-purple-500 hover:bg-purple-600 text-white px-4 py-2'
+          } font-medium rounded-lg transition-colors flex items-center`}
         >
-          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
-          Add Accommodation
+          {accommodations.length > 0 ? 'Add More Accommodation' : 'Add Accommodation'}
         </button>
       </div>
+
+      {/* Add Accommodation Form */}
+      {showAddForm && (
+        <div className="mb-6 bg-purple-50 border border-purple-200 rounded-lg p-6">
+          <h4 className="text-lg font-semibold text-purple-900 mb-4">Add Accommodation</h4>
+          <form onSubmit={(e) => { e.preventDefault(); handleAddAccommodation(); }} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Type <span className="text-red-500">*</span></label>
+                <select value={newAccommodation.type} onChange={(e) => setNewAccommodation({ ...newAccommodation, type: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" required>
+                  {accommodationTypes.map(type => <option key={type} value={type}>{type}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Name <span className="text-red-500">*</span></label>
+                <input type="text" value={newAccommodation.name} onChange={(e) => setNewAccommodation({ ...newAccommodation, name: e.target.value })} placeholder="e.g., Grand Hotel Orlando" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" required />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Address <span className="text-red-500">*</span></label>
+                <input type="text" value={newAccommodation.address} onChange={(e) => setNewAccommodation({ ...newAccommodation, address: e.target.value })} placeholder="Full address" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" required />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Cost/Night</label>
+                <input type="number" step="0.01" value={newAccommodation.cost} onChange={(e) => setNewAccommodation({ ...newAccommodation, cost: e.target.value })} placeholder="Optional" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Check-in</label>
+                <input type="date" value={newAccommodation.checkIn} onChange={(e) => setNewAccommodation({ ...newAccommodation, checkIn: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Check-out</label>
+                <input type="date" value={newAccommodation.checkOut} onChange={(e) => setNewAccommodation({ ...newAccommodation, checkOut: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Room Type</label>
+                <select value={newAccommodation.roomType} onChange={(e) => setNewAccommodation({ ...newAccommodation, roomType: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500">
+                  <option value="">Select room type</option>
+                  {roomTypes.map(type => <option key={type} value={type}>{type}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Confirmation Number</label>
+                <input type="text" value={newAccommodation.confirmationNumber} onChange={(e) => setNewAccommodation({ ...newAccommodation, confirmationNumber: e.target.value })} placeholder="Booking confirmation" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+              <textarea value={newAccommodation.notes} onChange={(e) => setNewAccommodation({ ...newAccommodation, notes: e.target.value })} placeholder="Booking confirmations, special requests, etc." rows="3" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500" />
+            </div>
+            <div className="flex gap-3">
+              <button type="submit" disabled={loading} className="bg-purple-500 hover:bg-purple-600 disabled:bg-purple-300 text-white font-medium py-2 px-4 rounded-lg transition-colors">
+                {loading ? 'Adding...' : 'Add Accommodation'}
+              </button>
+              <button type="button" onClick={() => setShowAddForm(false)} className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       {/* Accommodations List */}
       <div className="space-y-4">
@@ -466,154 +536,6 @@ const LodgingTab = ({ trip, onLodgingUpdate }) => {
         )}
       </div>
 
-      {/* Add Accommodation Form */}
-      {showAddForm && (
-        <div className="mt-6 bg-purple-50 border border-purple-200 rounded-lg p-6">
-          <h4 className="text-lg font-semibold text-purple-900 mb-4">Add Accommodation</h4>
-          
-          <form onSubmit={(e) => { e.preventDefault(); handleAddAccommodation(); }} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Accommodation Type
-                </label>
-                <select
-                  value={newAccommodation.type}
-                  onChange={(e) => setNewAccommodation({ ...newAccommodation, type: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                >
-                  {accommodationTypes.map(type => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Name
-                </label>
-                <input
-                  type="text"
-                  value={newAccommodation.name}
-                  onChange={(e) => setNewAccommodation({ ...newAccommodation, name: e.target.value })}
-                  placeholder="e.g., Grand Hotel Orlando"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Address
-                </label>
-                <input
-                  type="text"
-                  value={newAccommodation.address}
-                  onChange={(e) => setNewAccommodation({ ...newAccommodation, address: e.target.value })}
-                  placeholder="Full address or location"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Check-in Date
-                </label>
-                <input
-                  type="date"
-                  value={newAccommodation.checkIn}
-                  onChange={(e) => setNewAccommodation({ ...newAccommodation, checkIn: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Check-out Date
-                </label>
-                <input
-                  type="date"
-                  value={newAccommodation.checkOut}
-                  onChange={(e) => setNewAccommodation({ ...newAccommodation, checkOut: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Room Type
-                </label>
-                <select
-                  value={newAccommodation.roomType}
-                  onChange={(e) => setNewAccommodation({ ...newAccommodation, roomType: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                >
-                  <option value="">Select room type</option>
-                  {roomTypes.map(type => (
-                    <option key={type} value={type}>{type}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Total Cost ($)
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  value={newAccommodation.cost}
-                  onChange={(e) => setNewAccommodation({ ...newAccommodation, cost: e.target.value })}
-                  placeholder="0.00"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Confirmation Number
-                </label>
-                <input
-                  type="text"
-                  value={newAccommodation.confirmationNumber}
-                  onChange={(e) => setNewAccommodation({ ...newAccommodation, confirmationNumber: e.target.value })}
-                  placeholder="Booking confirmation number"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Notes
-              </label>
-              <textarea
-                value={newAccommodation.notes}
-                onChange={(e) => setNewAccommodation({ ...newAccommodation, notes: e.target.value })}
-                placeholder="Additional notes, amenities, special requests, etc."
-                rows="3"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
-              />
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                type="submit"
-                disabled={loading}
-                className="bg-purple-500 hover:bg-purple-600 disabled:bg-purple-300 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-              >
-                {loading ? 'Adding...' : 'Add Accommodation'}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowAddForm(false)}
-                className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
     </div>
   );
 };
