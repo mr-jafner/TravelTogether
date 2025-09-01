@@ -197,15 +197,36 @@ class Trip {
 
   // Update trip
   async update(id, tripData) {
-    const { name, destinations, startDate, endDate } = tripData;
+    const { name, destinations, startDate, endDate, participants } = tripData;
     
     try {
-      // Update basic trip info
-      await this.db.run(`
-        UPDATE trips 
-        SET name = ?, start_date = ?, end_date = ?, updated_at = CURRENT_TIMESTAMP
-        WHERE id = ?
-      `, [name, startDate, endDate, id]);
+      // Only update basic trip info if any basic fields are provided
+      const basicFields = [];
+      const basicValues = [];
+      
+      if (name !== undefined) {
+        basicFields.push('name = ?');
+        basicValues.push(name);
+      }
+      if (startDate !== undefined) {
+        basicFields.push('start_date = ?');
+        basicValues.push(startDate);
+      }
+      if (endDate !== undefined) {
+        basicFields.push('end_date = ?');
+        basicValues.push(endDate);
+      }
+      
+      if (basicFields.length > 0) {
+        basicFields.push('updated_at = CURRENT_TIMESTAMP');
+        basicValues.push(id);
+        
+        await this.db.run(`
+          UPDATE trips 
+          SET ${basicFields.join(', ')}
+          WHERE id = ?
+        `, basicValues);
+      }
       
       // Update destinations if provided
       if (destinations) {
@@ -218,6 +239,30 @@ class Trip {
             `INSERT INTO trip_destinations (trip_id, destination, order_index) 
              VALUES (?, ?, ?)`,
             [id, destinations[i], i]
+          );
+        }
+      }
+
+      // Update participants if provided
+      if (participants && participants.length > 0) {
+        // Get current participants to preserve is_current_user flags
+        const currentParticipants = await this.db.all(`
+          SELECT name, is_current_user FROM participants WHERE trip_id = ?
+        `, [id]);
+        
+        // Remove existing participants
+        await this.db.run(`DELETE FROM participants WHERE trip_id = ?`, [id]);
+        
+        // Insert updated participants, preserving is_current_user flags
+        for (let i = 0; i < participants.length; i++) {
+          const participantName = participants[i];
+          const existingParticipant = currentParticipants.find(p => p.name === participantName);
+          const isCurrentUser = existingParticipant ? existingParticipant.is_current_user : (i === 0 ? 1 : 0);
+          
+          await this.db.run(
+            `INSERT INTO participants (trip_id, name, is_current_user) 
+             VALUES (?, ?, ?)`,
+            [id, participantName, isCurrentUser]
           );
         }
       }

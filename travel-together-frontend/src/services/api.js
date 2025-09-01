@@ -60,15 +60,16 @@ export const tripApi = {
     });
   },
 
-  // Update trip
+  // Update trip  
   updateTrip: async (tripId, tripData) => {
-    // Convert single destination to array format for backend
-    const backendTripData = {
-      ...tripData,
-      destinations: Array.isArray(tripData.destinations) 
+    const backendTripData = { ...tripData };
+    
+    // Convert single destination to array format for backend, but only if destinations are provided
+    if (tripData.destinations !== undefined || tripData.destination !== undefined) {
+      backendTripData.destinations = Array.isArray(tripData.destinations) 
         ? tripData.destinations 
-        : [tripData.destination || tripData.destinations]
-    };
+        : [tripData.destination || tripData.destinations];
+    }
 
     return apiRequest(`/trips/${tripId}`, {
       method: 'PUT',

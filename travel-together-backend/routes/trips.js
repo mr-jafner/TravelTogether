@@ -88,7 +88,7 @@ router.put('/:id', async (req, res) => {
       return res.status(400).json({ error: 'Invalid trip ID' });
     }
 
-    const { name, destinations, startDate, endDate } = req.body;
+    const { name, destinations, startDate, endDate, participants } = req.body;
 
     // Check if trip exists
     const existingTrip = await tripModel.getById(tripId);
@@ -114,17 +114,39 @@ router.put('/:id', async (req, res) => {
       });
     }
 
+    // Validate participants if provided
+    if (participants && !Array.isArray(participants)) {
+      return res.status(400).json({ 
+        error: 'Participants must be an array' 
+      });
+    }
+
+    // Check for duplicate participant names if provided
+    if (participants && participants.length > 0) {
+      const uniqueParticipants = [...new Set(participants)];
+      if (uniqueParticipants.length !== participants.length) {
+        return res.status(400).json({ 
+          error: 'Duplicate participant names are not allowed' 
+        });
+      }
+    }
+
     const updatedTrip = await tripModel.update(tripId, {
       name,
       destinations,
       startDate,
-      endDate
+      endDate,
+      participants
     });
 
     res.json(updatedTrip);
   } catch (error) {
     console.error('Error updating trip:', error);
-    res.status(500).json({ error: 'Failed to update trip' });
+    console.error('Request body:', req.body);
+    res.status(500).json({ 
+      error: 'Failed to update trip', 
+      details: error.message 
+    });
   }
 });
 

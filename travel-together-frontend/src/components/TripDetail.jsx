@@ -25,6 +25,8 @@ const TripDetail = () => {
   const [activeTab, setActiveTab] = useState('activities');
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState({});
+  const [editingParticipants, setEditingParticipants] = useState(false);
+  const [participantNames, setParticipantNames] = useState([]);
   
   // Fetch trip data function (reusable)
   const fetchTripData = async () => {
@@ -57,6 +59,71 @@ const TripDetail = () => {
       month: 'short', 
       day: 'numeric' 
     });
+  };
+
+  // Participant editing functions
+  const startEditingParticipants = () => {
+    setParticipantNames([...trip.participants]);
+    setEditingParticipants(true);
+  };
+
+  const cancelEditingParticipants = () => {
+    setParticipantNames([]);
+    setEditingParticipants(false);
+  };
+
+  const updateParticipantName = (index, newName) => {
+    const updatedNames = [...participantNames];
+    updatedNames[index] = newName;
+    setParticipantNames(updatedNames);
+  };
+
+  const addParticipant = () => {
+    setParticipantNames([...participantNames, '']);
+  };
+
+  const removeParticipant = (index) => {
+    const updatedNames = participantNames.filter((_, i) => i !== index);
+    setParticipantNames(updatedNames);
+  };
+
+  const saveParticipantChanges = async () => {
+    try {
+      // Filter out empty names and trim whitespace
+      const cleanedNames = participantNames
+        .map(name => name.trim())
+        .filter(name => name.length > 0);
+
+      // Check for duplicates
+      const uniqueNames = [...new Set(cleanedNames)];
+      if (uniqueNames.length !== cleanedNames.length) {
+        setError('Duplicate participant names are not allowed');
+        return;
+      }
+
+      if (cleanedNames.length === 0) {
+        setError('At least one participant is required');
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
+
+      // Update trip with new participants
+      await tripApi.updateTrip(trip.id, {
+        participants: cleanedNames
+      });
+
+      // Refresh trip data
+      setRefreshKey(prev => prev + 1);
+      setEditingParticipants(false);
+      setParticipantNames([]);
+    } catch (err) {
+      console.error('Failed to update participants:', err);
+      setError('Failed to update participants. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const trip = currentTrip;
@@ -429,22 +496,96 @@ const TripDetail = () => {
         
         {/* Participants Section */}
         <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
-          <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-            <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-            Participants ({trip.participants.length})
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {trip.participants.map((participant, index) => (
-              <div key={index} className="flex items-center p-3 bg-gray-50 rounded-lg">
-                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium text-sm mr-3">
-                  {participant.split(' ').map(n => n[0]).join('')}
-                </div>
-                <span className="text-gray-900 font-medium">{participant}</span>
-              </div>
-            ))}
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-bold text-gray-900 flex items-center">
+              <svg className="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              Participants ({editingParticipants ? participantNames.length : trip.participants.length})
+            </h3>
+            {!editingParticipants && (
+              <button
+                onClick={startEditingParticipants}
+                className="px-3 py-1 text-sm bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition-colors flex items-center"
+              >
+                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Edit
+              </button>
+            )}
           </div>
+
+          {editingParticipants ? (
+            // Editing mode
+            <div className="space-y-4">
+              {participantNames.map((name, index) => (
+                <div key={index} className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium text-sm">
+                    {name ? name.split(' ').map(n => n[0]).join('').slice(0, 2) : '?'}
+                  </div>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => updateParticipantName(index, e.target.value)}
+                    placeholder="Enter participant name"
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  {participantNames.length > 1 && (
+                    <button
+                      onClick={() => removeParticipant(index)}
+                      className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded"
+                      title="Remove participant"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              ))}
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={addParticipant}
+                  className="px-3 py-2 text-sm bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition-colors flex items-center"
+                >
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Add Participant
+                </button>
+              </div>
+
+              <div className="flex gap-3 pt-4 border-t border-gray-200">
+                <button
+                  onClick={saveParticipantChanges}
+                  disabled={loading}
+                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white rounded-lg transition-colors"
+                >
+                  {loading ? 'Saving...' : 'Save Changes'}
+                </button>
+                <button
+                  onClick={cancelEditingParticipants}
+                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            // Display mode
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {trip.participants.map((participant, index) => (
+                <div key={index} className="flex items-center p-3 bg-gray-50 rounded-lg">
+                  <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium text-sm mr-3">
+                    {participant.split(' ').map(n => n[0]).join('')}
+                  </div>
+                  <span className="text-gray-900 font-medium">{participant}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Tabbed Interface */}
