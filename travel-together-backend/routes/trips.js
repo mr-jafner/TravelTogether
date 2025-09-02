@@ -653,4 +653,81 @@ router.delete('/:id/logistics/:logisticsId', async (req, res) => {
   }
 });
 
+// GET /api/trips/:id/export - Export complete trip data
+router.get('/:id/export', async (req, res) => {
+  try {
+    const tripId = parseInt(req.params.id);
+    if (isNaN(tripId)) {
+      return res.status(400).json({ error: 'Invalid trip ID' });
+    }
+
+    // Get complete trip data including all tabs
+    const trip = await tripModel.getById(tripId);
+    if (!trip) {
+      return res.status(404).json({ error: 'Trip not found' });
+    }
+
+    // Calculate average ratings for activities and restaurants
+    const calculateAverage = (ratings) => {
+      if (!ratings || ratings.length === 0) return 0;
+      const sum = ratings.reduce((acc, r) => acc + r.rating, 0);
+      return Math.round((sum / ratings.length) * 10) / 10;
+    };
+
+    // Structure export data with all tab information
+    const exportData = {
+      tripInfo: {
+        id: trip.id,
+        name: trip.name,
+        destinations: trip.destinations,
+        startDate: trip.startDate,
+        endDate: trip.endDate,
+        participants: trip.participants
+      },
+      activities: (trip.activities || []).map(activity => ({
+        id: activity.id,
+        name: activity.name,
+        category: activity.category,
+        location: activity.location,
+        cost: activity.cost,
+        duration: activity.duration,
+        ratings: (activity.ratings || []).map(r => ({
+          user: r.userName,
+          rating: r.rating
+        })),
+        averageRating: calculateAverage(activity.ratings)
+      })),
+      restaurants: (trip.restaurants || []).map(restaurant => ({
+        id: restaurant.id,
+        name: restaurant.name,
+        cuisine: restaurant.cuisine,
+        location: restaurant.location,
+        cost: restaurant.cost,
+        priceRange: restaurant.priceRange,
+        groupCapacity: restaurant.groupCapacity,
+        dietaryOptions: restaurant.dietaryOptions,
+        ratings: (restaurant.ratings || []).map(r => ({
+          user: r.userName,
+          rating: r.rating
+        })),
+        averageRating: calculateAverage(restaurant.ratings)
+      })),
+      travel: trip.travel || [],
+      lodging: trip.lodging || [],
+      logistics: trip.logistics || [],
+      itinerary: trip.itinerary || [],
+      exportMetadata: {
+        exportedAt: new Date().toISOString(),
+        exportedBy: 'TravelTogether Export System',
+        version: '1.0'
+      }
+    };
+
+    res.json(exportData);
+  } catch (error) {
+    console.error('Error exporting trip:', error);
+    res.status(500).json({ error: 'Failed to export trip data' });
+  }
+});
+
 module.exports = router;
