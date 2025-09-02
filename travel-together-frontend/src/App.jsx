@@ -11,6 +11,7 @@ import TripCreation from './components/TripCreation';
 import HomeDashboard from './features/dashboard/HomeDashboard';
 import { UserProvider, useUser } from './contexts/UserContext';
 import LoginModal from './components/auth/LoginModal';
+import AdminUsernameManager from './components/auth/AdminUsernameManager';
 
 function MyTrips() {
   const navigate = useNavigate();
@@ -147,6 +148,7 @@ function AppContent() {
           <Route path="/trips/create" element={<TripCreation />} />
           <Route path="/trips/:tripId" element={<TripDetail />} />
           <Route path="/feed" element={<Feed />} />
+          <Route path="/admin/users" element={<AdminUsernameManager />} />
           {/* Add more routes as you build components */}
         </Routes>
         
