@@ -98,7 +98,7 @@ export const UserProvider = ({ children }) => {
         apiService
       );
 
-      if (!validation.valid) {
+      if (!validation.valid && !validation.isReclaim) {
         const conflictDetails = validation.conflicts
           .map(c => `"${c.conflictingParticipant}" in ${c.tripName}`)
           .join(', ');
@@ -109,10 +109,14 @@ export const UserProvider = ({ children }) => {
       const savedUsername = usernameService.saveUsername(trimmedUsername);
       setUsernameState(savedUsername);
       
+      const message = validation.isReclaim 
+        ? `Username updated to "${savedUsername}" (reclaimed from trip data)`
+        : `Username updated to "${savedUsername}"`;
+      
       return { 
         success: true, 
         username: savedUsername,
-        message: `Username updated to "${savedUsername}"`
+        message: message
       };
       
     } catch (error) {

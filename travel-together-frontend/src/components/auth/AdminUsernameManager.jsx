@@ -4,7 +4,7 @@ import UsernameEditModal from './UsernameEditModal';
 import api from '../../services/api';
 
 const AdminUsernameManager = () => {
-  const [allParticipants, setAllParticipants] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
   const [trips, setTrips] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -18,24 +18,51 @@ const AdminUsernameManager = () => {
   const loadData = async () => {
     try {
       setIsLoading(true);
-      const [participants, tripsData] = await Promise.all([
+      const [tripParticipants, tripsData] = await Promise.all([
         usernameService.getExistingParticipants(api),
-        api.getTrips()
+        api.tripApi.getAllTrips()
       ]);
       
-      setAllParticipants(participants);
+      // Get all users: trip participants + any other usernames from localStorage history
+      const allUsernames = new Set(tripParticipants);
+      
+      // Add current logged-in user if not already in the list
+      const currentUser = usernameService.getStoredUsername();
+      if (currentUser && !allUsernames.has(currentUser)) {
+        allUsernames.add(currentUser);
+      }
+      
+      // TODO: In a real system, this would fetch all users from a user database
+      // For now, we'll show trip participants + current user + any we can discover
+      
+      // Create user objects with additional metadata
+      const userList = Array.from(allUsernames).map(username => {
+        const userTrips = tripsData.filter(trip => 
+          trip.participants?.some(p => p.toLowerCase() === username.toLowerCase())
+        );
+        
+        return {
+          username,
+          tripCount: userTrips.length,
+          trips: userTrips,
+          isCurrentUser: currentUser?.toLowerCase() === username.toLowerCase(),
+          source: tripParticipants.includes(username) ? 'trip' : 'login'
+        };
+      }).sort((a, b) => {
+        // Sort by trip count descending, then alphabetically
+        if (a.tripCount !== b.tripCount) {
+          return b.tripCount - a.tripCount;
+        }
+        return a.username.localeCompare(b.username);
+      });
+      
+      setAllUsers(userList);
       setTrips(tripsData);
     } catch (error) {
       console.error('Failed to load admin data:', error);
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const getParticipantTrips = (participantName) => {
-    return trips.filter(trip => 
-      trip.participants?.some(p => p.toLowerCase() === participantName.toLowerCase())
-    );
   };
 
   const handleEditUser = (username) => {
@@ -50,8 +77,8 @@ const AdminUsernameManager = () => {
     loadData();
   };
 
-  const filteredParticipants = allParticipants.filter(name =>
-    name.toLowerCase().includes(searchFilter.toLowerCase())
+  const filteredUsers = allUsers.filter(user =>
+    user.username.toLowerCase().includes(searchFilter.toLowerCase())
   );
 
   if (isLoading) {
@@ -92,14 +119,14 @@ const AdminUsernameManager = () => {
       {/* Search */}
       <div className="mb-6">
         <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
-          Search participants:
+          Search users:
         </label>
         <input
           id="search"
           type="text"
           value={searchFilter}
           onChange={(e) => setSearchFilter(e.target.value)}
-          placeholder="Type to filter participants..."
+          placeholder="Type to filter users..."
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
         />
       </div>
@@ -114,8 +141,8 @@ const AdminUsernameManager = () => {
               </svg>
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Participants</p>
-              <p className="text-2xl font-bold text-gray-900">{allParticipants.length}</p>
+              <p className="text-sm font-medium text-gray-600">Total Users</p>
+              <p className="text-2xl font-bold text-gray-900">{allUsers.length}</p>
             </div>
           </div>
         </div>
@@ -143,46 +170,60 @@ const AdminUsernameManager = () => {
             </div>
             <div>
               <p className="text-sm font-medium text-gray-600">Filtered Results</p>
-              <p className="text-2xl font-bold text-gray-900">{filteredParticipants.length}</p>
+              <p className="text-2xl font-bold text-gray-900">{filteredUsers.length}</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Participants List */}
+      {/* Users List */}
       <div className="bg-white rounded-lg border border-gray-200">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">All Participants</h2>
-          <p className="text-sm text-gray-600 mt-1">Click "Edit" to modify a participant's username across all their trips</p>
+          <h2 className="text-lg font-semibold text-gray-900">All Users</h2>
+          <p className="text-sm text-gray-600 mt-1">Click "Edit" to modify a user's username across all their trips</p>
         </div>
 
         <div className="divide-y divide-gray-200">
-          {filteredParticipants.length === 0 ? (
+          {filteredUsers.length === 0 ? (
             <div className="px-6 py-8 text-center text-gray-500">
-              {searchFilter ? 'No participants match your search.' : 'No participants found.'}
+              {searchFilter ? 'No users match your search.' : 'No users found.'}
             </div>
           ) : (
-            filteredParticipants.map((participant, index) => {
-              const participantTrips = getParticipantTrips(participant);
-              
+            filteredUsers.map((user, index) => {
               return (
                 <div key={index} className="px-6 py-4 hover:bg-gray-50">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-3">
                         {/* Avatar */}
-                        <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                          user.isCurrentUser ? 'bg-green-500' : 'bg-blue-500'
+                        }`}>
                           <span className="text-white text-sm font-semibold">
-                            {participant.split(' ').map(part => part.charAt(0).toUpperCase()).join('').slice(0, 2)}
+                            {user.username.split(' ').map(part => part.charAt(0).toUpperCase()).join('').slice(0, 2)}
                           </span>
                         </div>
                         
                         {/* Name and Details */}
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">{participant}</p>
-                          <p className="text-xs text-gray-500">
-                            {participantTrips.length} trip{participantTrips.length !== 1 ? 's' : ''}: {' '}
-                            {participantTrips.map(trip => trip.name).join(', ')}
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2">
+                            <p className="text-sm font-medium text-gray-900">{user.username}</p>
+                            {user.isCurrentUser && (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                Current User
+                              </span>
+                            )}
+                            <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${
+                              user.source === 'trip' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
+                            }`}>
+                              {user.source === 'trip' ? 'Trip Participant' : 'Login Only'}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {user.tripCount > 0 
+                              ? `${user.tripCount} trip${user.tripCount !== 1 ? 's' : ''}: ${user.trips.map(trip => trip.name).join(', ')}`
+                              : 'Not participating in any trips'
+                            }
                           </p>
                         </div>
                       </div>
@@ -190,12 +231,14 @@ const AdminUsernameManager = () => {
 
                     {/* Actions */}
                     <div className="flex items-center space-x-2">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {participantTrips.length} trip{participantTrips.length !== 1 ? 's' : ''}
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        user.tripCount > 0 ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-600'
+                      }`}>
+                        {user.tripCount} trip{user.tripCount !== 1 ? 's' : ''}
                       </span>
                       
                       <button
-                        onClick={() => handleEditUser(participant)}
+                        onClick={() => handleEditUser(user.username)}
                         className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                       >
                         <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">

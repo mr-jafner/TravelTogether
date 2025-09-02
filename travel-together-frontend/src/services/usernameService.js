@@ -12,7 +12,7 @@ class UsernameService {
   // Fetch all participants from live API data (includes production data)
   async fetchExistingParticipants(apiService) {
     try {
-      const trips = await apiService.getTrips();
+      const trips = await apiService.tripApi.getAllTrips();
       
       // Extract all unique participants from all trips
       const allParticipants = trips.flatMap(trip => trip.participants || []);
@@ -215,46 +215,42 @@ class UsernameService {
     const trimmedUsername = newUsername.trim();
     
     // Allow if it's the same name
-    if (currentUsername && trimmedUsername === currentUsername) {
+    if (currentUsername && trimmedUsername.toLowerCase() === currentUsername.toLowerCase()) {
       return { valid: true, conflicts: [] };
     }
 
     try {
-      // Get all trips to check for conflicts
-      const trips = await apiService.getTrips();
-      const conflicts = [];
+      // Get existing participants from production data
+      const existingParticipants = await this.getExistingParticipants(apiService);
+      
+      // Check for case-insensitive match with existing participants (excluding current user)
+      const conflict = existingParticipants.find(participant => 
+        participant.toLowerCase() === trimmedUsername.toLowerCase() &&
+        participant.toLowerCase() !== (currentUsername || '').toLowerCase()
+      );
 
-      trips.forEach(trip => {
-        const participants = trip.participants || [];
-        
-        // Check if current user is in this trip
-        const isUserInTrip = participants.some(p => 
-          p.toLowerCase() === (currentUsername || '').toLowerCase()
+      if (conflict) {
+        // Find which trips contain this participant
+        const trips = await apiService.tripApi.getAllTrips();
+        const conflictTrips = trips.filter(trip => 
+          trip.participants?.some(p => p.toLowerCase() === conflict.toLowerCase())
         );
-        
-        if (isUserInTrip) {
-          // Check if new username conflicts with other participants
-          const hasConflict = participants.some(p => 
-            p.toLowerCase() === trimmedUsername.toLowerCase() && 
-            p.toLowerCase() !== (currentUsername || '').toLowerCase()
-          );
-          
-          if (hasConflict) {
-            conflicts.push({
-              tripId: trip.id,
-              tripName: trip.name,
-              conflictingParticipant: participants.find(p => 
-                p.toLowerCase() === trimmedUsername.toLowerCase()
-              )
-            });
-          }
-        }
-      });
 
-      return {
-        valid: conflicts.length === 0,
-        conflicts: conflicts
-      };
+        // Important: For user self-editing, this is just a warning
+        // The user can choose to "reclaim" a username they used before
+        return {
+          valid: false,
+          conflicts: conflictTrips.map(trip => ({
+            tripId: trip.id,
+            tripName: trip.name,
+            conflictingParticipant: conflict
+          })),
+          isReclaim: true, // Flag to indicate this might be reclaiming their own old username
+          warning: `"${trimmedUsername}" exists in trip data. You can still use this name, but it may cause confusion with existing trip participants.`
+        };
+      }
+
+      return { valid: true, conflicts: [] };
       
     } catch (error) {
       console.error('Error validating username change:', error);
