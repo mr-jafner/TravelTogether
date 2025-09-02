@@ -315,6 +315,25 @@ const TripDetail = () => {
     }
   };
 
+  const handleExportTrip = async () => {
+    try {
+      setError(null);
+      setLoading(true);
+      
+      // Import export utilities dynamically
+      const { exportTripData } = await import('../utils/exportUtils');
+      
+      // Export all formats
+      await exportTripData(tripId, trip.name);
+      
+    } catch (error) {
+      console.error('Failed to export trip:', error);
+      setError(`Failed to export trip: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Loading state
   if (loading) {
     return (
@@ -393,6 +412,15 @@ const TripDetail = () => {
                   {trip.name}
                 </h1>
                 <div className="flex space-x-2">
+                  <button
+                    onClick={handleExportTrip}
+                    className="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 rounded-lg transition-colors"
+                  >
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                    </svg>
+                    Export
+                  </button>
                   <button
                     onClick={handleEditTrip}
                     className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
