@@ -3,7 +3,7 @@ import { useUser } from '../../contexts/UserContext';
 import usernameService from '../../services/usernameService';
 import api from '../../services/api';
 
-const UsernameEditModal = ({ isOpen, onClose, adminMode = false, targetUsername = null }) => {
+const UsernameEditModal = ({ isOpen, onClose, adminMode = false, targetUsername = null, onSuccessfulUpdate = null }) => {
   const { username: currentUsername, updateUsername } = useUser();
   const [newUsername, setNewUsername] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -130,6 +130,12 @@ const UsernameEditModal = ({ isOpen, onClose, adminMode = false, targetUsername 
 
         if (response.ok && result.success) {
           setSuccess(`✅ Successfully updated "${editingUsername}" to "${trimmedUsername}" across ${result.tripsAffected.length} trip${result.tripsAffected.length !== 1 ? 's' : ''}: ${result.tripsAffected.map(t => t.name).join(', ')}`);
+          
+          // Immediately refresh parent component data
+          if (onSuccessfulUpdate) {
+            onSuccessfulUpdate(editingUsername, trimmedUsername, result);
+          }
+          
           setTimeout(() => {
             onClose();
           }, 3000); // Give more time to read success message

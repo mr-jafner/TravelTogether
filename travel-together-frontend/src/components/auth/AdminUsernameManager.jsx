@@ -6,21 +6,36 @@ import api from '../../services/api';
 const AdminUsernameManager = () => {
   const [allUsers, setAllUsers] = useState([]);
   const [trips, setTrips] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingData, setIsLoadingData] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [searchFilter, setSearchFilter] = useState('');
+  const [hasRecentUpdate, setHasRecentUpdate] = useState(false);
 
   useEffect(() => {
     loadData();
   }, []);
 
-  const loadData = async () => {
+  const loadData = async (bustCache = false) => {
+    if (isLoadingData) {
+      return; // Prevent concurrent data loading
+    }
+    
     try {
+      setIsLoadingData(true);
       setIsLoading(true);
+      
+      // Add cache-busting parameter when needed
+      const tripApiCall = bustCache 
+        ? fetch(`${window.location.protocol}//${window.location.host}/api/trips?_=${Date.now()}`, {
+            headers: { 'Cache-Control': 'no-cache' }
+          }).then(r => r.json())
+        : api.tripApi.getAllTrips();
+      
       const [tripParticipants, tripsData] = await Promise.all([
         usernameService.getExistingParticipants(api),
-        api.tripApi.getAllTrips()
+        tripApiCall
       ]);
       
       // Get all users: trip participants + any other usernames from localStorage history
@@ -58,10 +73,12 @@ const AdminUsernameManager = () => {
       
       setAllUsers(userList);
       setTrips(tripsData);
+      console.log('Updated users state:', userList.map(u => u.username));
     } catch (error) {
       console.error('Failed to load admin data:', error);
     } finally {
       setIsLoading(false);
+      setIsLoadingData(false);
     }
   };
 
@@ -73,8 +90,32 @@ const AdminUsernameManager = () => {
   const handleEditModalClose = () => {
     setShowEditModal(false);
     setSelectedUser(null);
-    // Reload data in case changes were made
-    loadData();
+    // Only reload if no recent successful update already refreshed the data
+    if (!hasRecentUpdate) {
+      loadData();
+    }
+    setHasRecentUpdate(false);
+  };
+
+  const handleSuccessfulUpdate = async (oldUsername, newUsername, result) => {
+    // Immediately reload fresh data from server to show the updated username
+    console.log('handleSuccessfulUpdate called:', { oldUsername, newUsername, result });
+    console.log('Users before update:', allUsers.map(u => u.username));
+    setHasRecentUpdate(true);
+    
+    // Clear the username service cache to force fresh data
+    usernameService.clearCache();
+    
+    // Force a complete refresh by clearing the state first
+    setAllUsers([]);
+    setTrips([]);
+    
+    // Add a small delay to ensure database changes are committed before refetching
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Then reload with fresh data (with cache busting)
+    await loadData(true);
+    console.log('Data reloaded after username update');
   };
 
   const filteredUsers = allUsers.filter(user =>
@@ -261,6 +302,7 @@ const AdminUsernameManager = () => {
         onClose={handleEditModalClose}
         adminMode={true}
         targetUsername={selectedUser}
+        onSuccessfulUpdate={handleSuccessfulUpdate}
       />
     </div>
   );
