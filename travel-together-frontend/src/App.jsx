@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import ttLogo from './assets/TT_logo_nobg.png'
@@ -9,6 +9,9 @@ import TripList from './components/TripList'
 import TripDetail from './components/TripDetail';
 import TripCreation from './components/TripCreation';
 import HomeDashboard from './features/dashboard/HomeDashboard';
+import { UserProvider, useUser } from './contexts/UserContext';
+import LoginModal from './components/auth/LoginModal';
+import AdminUsernameManager from './components/auth/AdminUsernameManager';
 
 function MyTrips() {
   const navigate = useNavigate();
@@ -101,9 +104,42 @@ function WelcomeSection() {
   );
 }
 
-function App() {
+// Main app component with user authentication
+function AppContent() {
+  const { isLoggedIn, isLoading } = useUser();
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
+  // Show/hide login modal based on login state
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isLoggedIn) {
+        setShowLoginModal(true);
+      } else {
+        setShowLoginModal(false);
+      }
+    }
+  }, [isLoggedIn, isLoading]);
+
+  const handleLoginModalClose = () => {
+    // Only allow closing if user is logged in
+    if (isLoggedIn) {
+      setShowLoginModal(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading TravelTogether...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <BrowserRouter  basename="/traveltogether">
+    <>
       <Header />
       <main>
         <Routes>
@@ -112,14 +148,29 @@ function App() {
           <Route path="/trips/create" element={<TripCreation />} />
           <Route path="/trips/:tripId" element={<TripDetail />} />
           <Route path="/feed" element={<Feed />} />
+          <Route path="/admin/users" element={<AdminUsernameManager />} />
           {/* Add more routes as you build components */}
         </Routes>
         
         <WelcomeSection />
       </main>
-    </BrowserRouter>
 
-    
+      {/* Login Modal */}
+      <LoginModal 
+        isOpen={showLoginModal} 
+        onClose={handleLoginModalClose}
+      />
+    </>
+  );
+}
+
+function App() {
+  return (
+    <UserProvider>
+      <BrowserRouter basename="/traveltogether">
+        <AppContent />
+      </BrowserRouter>
+    </UserProvider>
   );
 }
 

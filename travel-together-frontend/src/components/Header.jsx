@@ -2,13 +2,15 @@ import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import './Header.css';
 import ttLogo from '../assets/TT_logo_nobg.png';
+import { useUser } from '../contexts/UserContext';
+import UserDisplay from './auth/UserDisplay';
 
 function Header() {
   // State for mobile menu toggle (for future implementation)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Placeholder for authentication state (Phase 2)
-  const isLoggedIn = false; // This will come from your auth context later
+  // Get authentication state from context
+  const { isLoggedIn } = useUser();
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
@@ -62,48 +64,7 @@ function Header() {
             
             {/* Desktop User Menu */}
             <div className="desktop-user-menu">
-              {isLoggedIn ? (
-                <>
-                  {/* Notification bell placeholder */}
-                  <button 
-                    className="notification-btn"
-                    aria-label="View notifications"
-                  >
-                    <svg className="notification-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-3.5-3.5a50.9 50.9 0 01-5.5 3.5zm0 0l-.5 5h-9l-.5-5m10 0a50.9 50.9 0 01-5.5 3.5m5.5-3.5L13.5 10a50.9 50.9 0 015.5 7.5z" />
-                    </svg>
-                  </button>
-                  
-                  {/* User Profile Link */}
-                  <Link 
-                    to="/profile" 
-                    className="nav-link"
-                    aria-label="View profile"
-                  >
-                    Profile
-                  </Link>
-                  
-                  {/* Logout button placeholder */}
-                  <button className="logout-btn">
-                    Logout
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Link 
-                    to="/login" 
-                    className="nav-link"
-                  >
-                    Login
-                  </Link>
-                  <Link 
-                    to="/signup" 
-                    className="signup-btn"
-                  >
-                    Sign Up
-                  </Link>
-                </>
-              )}
+              <UserDisplay />
             </div>
 
             {/* Mobile Menu Button */}
@@ -157,37 +118,9 @@ function Header() {
               
               {/* Mobile User Actions */}
               <div className="mobile-user-actions">
-                {isLoggedIn ? (
-                  <>
-                    <Link 
-                      to="/profile" 
-                      className="mobile-nav-link"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      Profile
-                    </Link>
-                    <button className="mobile-logout-btn">
-                      Logout
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <Link 
-                      to="/login" 
-                      className="mobile-nav-link"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      Login
-                    </Link>
-                    <Link 
-                      to="/signup" 
-                      className="mobile-signup-btn"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      Sign Up
-                    </Link>
-                  </>
-                )}
+                <div className="p-4">
+                  <UserDisplay />
+                </div>
               </div>
             </nav>
           </div>
