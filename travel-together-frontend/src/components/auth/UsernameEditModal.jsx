@@ -114,9 +114,32 @@ const UsernameEditModal = ({ isOpen, onClose, adminMode = false, targetUsername 
 
     try {
       if (adminMode) {
-        // Admin mode: Would need backend API to update participant names across trips
-        // For now, show what would happen
-        setSuccess(`Admin mode: Would update "${editingUsername}" to "${trimmedUsername}" across ${affectedTrips.length} trips. Backend API needed for implementation.`);
+        // Admin mode: Call backend API to update participant names across trips
+        const response = await fetch('/api/trips/update-username', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            oldUsername: editingUsername,
+            newUsername: trimmedUsername
+          })
+        });
+
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+          setSuccess(`✅ Successfully updated "${editingUsername}" to "${trimmedUsername}" across ${result.tripsAffected.length} trip${result.tripsAffected.length !== 1 ? 's' : ''}: ${result.tripsAffected.map(t => t.name).join(', ')}`);
+          setTimeout(() => {
+            onClose();
+          }, 3000); // Give more time to read success message
+        } else {
+          if (result.conflicts && result.conflicts.length > 0) {
+            setError(`❌ Username "${trimmedUsername}" already exists in: ${result.conflicts.map(c => c.tripName).join(', ')}`);
+          } else {
+            setError(`❌ ${result.error || 'Failed to update username'}`);
+          }
+        }
       } else {
         // User self-editing
         const result = await updateUsername(trimmedUsername, api);
