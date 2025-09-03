@@ -604,6 +604,53 @@ class Trip {
       throw new Error(`Failed to delete logistics info: ${error.message}`);
     }
   }
+
+  // Update username across all trips
+  async updateUsernameGlobally(oldUsername, newUsername) {
+    try {
+      // Find all trips containing the old username
+      const affectedTrips = await this.db.all(`
+        SELECT DISTINCT t.id, t.name 
+        FROM trips t
+        JOIN participants p ON t.id = p.trip_id
+        WHERE p.name = ?
+      `, [oldUsername]);
+
+      if (affectedTrips.length === 0) {
+        return { success: true, message: 'No trips found with this username', tripsAffected: [] };
+      }
+
+      // Check if new username already exists in any of these trips
+      const conflicts = await this.db.all(`
+        SELECT DISTINCT t.id, t.name, p.name
+        FROM trips t
+        JOIN participants p ON t.id = p.trip_id
+        WHERE p.name = ? AND t.id IN (${affectedTrips.map(() => '?').join(',')})
+      `, [newUsername, ...affectedTrips.map(trip => trip.id)]);
+
+      if (conflicts.length > 0) {
+        return { 
+          success: false, 
+          error: 'New username already exists in some trips', 
+          conflicts: conflicts.map(c => ({ tripId: c.id, tripName: c.name }))
+        };
+      }
+
+      // Perform the update
+      const result = await this.db.run(`
+        UPDATE participants SET name = ? WHERE name = ?
+      `, [newUsername, oldUsername]);
+
+      return {
+        success: true,
+        message: `Updated username from '${oldUsername}' to '${newUsername}'`,
+        tripsAffected: affectedTrips.map(trip => ({ id: trip.id, name: trip.name })),
+        participantRowsUpdated: result.changes
+      };
+    } catch (error) {
+      throw new Error(`Failed to update username globally: ${error.message}`);
+    }
+  }
 }
 
 module.exports = Trip;

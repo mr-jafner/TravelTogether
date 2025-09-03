@@ -80,6 +80,48 @@ router.post('/', async (req, res) => {
   }
 });
 
+// PUT /api/trips/update-username - Update username across all trips (must be before /:id route)
+router.put('/update-username', async (req, res) => {
+  try {
+    const { oldUsername, newUsername } = req.body;
+
+    // Validate required fields
+    if (!oldUsername || !newUsername) {
+      return res.status(400).json({ 
+        error: 'Missing required fields: oldUsername, newUsername' 
+      });
+    }
+
+    // Validate usernames are different
+    if (oldUsername === newUsername) {
+      return res.status(400).json({ 
+        error: 'New username must be different from old username' 
+      });
+    }
+
+    // Validate username format (basic validation)
+    if (newUsername.trim().length === 0) {
+      return res.status(400).json({ 
+        error: 'New username cannot be empty' 
+      });
+    }
+
+    const result = await tripModel.updateUsernameGlobally(
+      oldUsername.trim(), 
+      newUsername.trim()
+    );
+
+    if (result.success) {
+      res.json(result);
+    } else {
+      res.status(409).json(result); // Conflict due to duplicate username
+    }
+  } catch (error) {
+    console.error('Error updating username globally:', error);
+    res.status(500).json({ error: 'Failed to update username' });
+  }
+});
+
 // PUT /api/trips/:id - Update trip
 router.put('/:id', async (req, res) => {
   try {
