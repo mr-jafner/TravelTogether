@@ -80,3 +80,4 @@ temp/
 # Project documentation (personal notes for Claude Code sessions)
 ref/
 .claude/
+AGENTS.md
