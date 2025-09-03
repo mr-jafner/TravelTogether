@@ -17,6 +17,31 @@ router.get('/', async (req, res) => {
   }
 });
 
+// GET /api/trips/participants/search - Search for existing participants
+router.get('/participants/search', async (req, res) => {
+  try {
+    const { q } = req.query;
+    
+    if (!q || q.length < 1) {
+      return res.json([]);
+    }
+    
+    // Search for participant names that contain the query (case-insensitive)
+    const participants = await database.all(`
+      SELECT DISTINCT name 
+      FROM participants 
+      WHERE LOWER(name) LIKE LOWER(?)
+      ORDER BY name
+      LIMIT 10
+    `, [`%${q}%`]);
+    
+    res.json(participants.map(p => p.name));
+  } catch (error) {
+    console.error('Error searching participants:', error);
+    res.status(500).json({ error: 'Failed to search participants' });
+  }
+});
+
 // GET /api/trips/:id - Get single trip with full details
 router.get('/:id', async (req, res) => {
   try {

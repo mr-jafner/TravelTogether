@@ -8,6 +8,7 @@ import { tripApi, ratingApi, transformTripForFrontend } from '../services/api';
 import TabNavigation from './TabNavigation';
 import ActivitiesTab from './ActivitiesTab';
 import FoodTab from './FoodTab';
+import ParticipantAutocompleteInput from './common/ParticipantAutocompleteInput';
 import TravelTab from './TravelTab';
 import LodgingTab from './LodgingTab';
 import LogisticsTab from './LogisticsTab';
@@ -553,12 +554,11 @@ const TripDetail = () => {
                   <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium text-sm">
                     {name ? name.split(' ').map(n => n[0]).join('').slice(0, 2) : '?'}
                   </div>
-                  <input
-                    type="text"
+                  <ParticipantAutocompleteInput
                     value={name}
-                    onChange={(e) => updateParticipantName(index, e.target.value)}
+                    onChange={(value) => updateParticipantName(index, value)}
                     placeholder="Enter participant name"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="flex-1"
                   />
                   {participantNames.length > 1 && (
                     <button

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { tripApi } from '../services/api';
+import ParticipantAutocompleteInput from './common/ParticipantAutocompleteInput';
 
 const TripCreation = () => {
   const navigate = useNavigate();
@@ -30,11 +31,12 @@ const TripCreation = () => {
     }
   };
 
-  const addParticipant = () => {
-    if (newParticipant.trim() && !formData.participants.includes(newParticipant.trim())) {
+  const addParticipant = (participantName = null) => {
+    const nameToAdd = participantName || newParticipant.trim();
+    if (nameToAdd && !formData.participants.includes(nameToAdd)) {
       setFormData(prev => ({
         ...prev,
-        participants: [...prev.participants, newParticipant.trim()]
+        participants: [...prev.participants, nameToAdd]
       }));
       setNewParticipant('');
     }
@@ -217,24 +219,29 @@ const TripCreation = () => {
               Add friends, family, or colleagues who will be joining this trip. They'll be able to vote on activities and restaurants.
             </p>
 
-            {/* Add Participant Input */}
+            {/* Add Participant Input with Autocomplete */}
             <div className="flex gap-2 mb-4">
-              <input
-                type="text"
+              <ParticipantAutocompleteInput
                 value={newParticipant}
-                onChange={(e) => setNewParticipant(e.target.value)}
+                onChange={setNewParticipant}
+                onAdd={addParticipant}
                 onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addParticipant())}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter participant name"
+                placeholder="Start typing participant name..."
+                className="flex-1"
               />
               <button
                 type="button"
-                onClick={addParticipant}
+                onClick={() => addParticipant()}
                 className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
               >
                 Add
               </button>
             </div>
+            
+            {/* Helper Text */}
+            <p className="text-xs text-gray-500 mb-4">
+              Start typing to see existing participants, or enter a new name to add them to the system.
+            </p>
 
             {/* Participant Chips */}
             <div className="flex flex-wrap gap-2 mb-2">
