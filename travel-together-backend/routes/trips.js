@@ -17,6 +17,68 @@ router.get('/', async (req, res) => {
   }
 });
 
+// GET /api/users/:username/trips - Get trips where user participates
+router.get('/users/:username/trips', async (req, res) => {
+  try {
+    const { username } = req.params;
+    
+    if (!username || typeof username !== 'string' || username.trim().length === 0) {
+      return res.status(400).json({ error: 'Valid username is required' });
+    }
+    
+    const trimmedUsername = username.trim();
+    
+    // Get trips where user participates with proper joins
+    const userTrips = await database.all(`
+      SELECT DISTINCT 
+        t.id, 
+        t.name, 
+        t.start_date as startDate, 
+        t.end_date as endDate, 
+        t.created_at as createdAt,
+        GROUP_CONCAT(DISTINCT td.destination ORDER BY td.order_index) as destinations
+      FROM trips t
+      JOIN participants p ON t.id = p.trip_id
+      LEFT JOIN trip_destinations td ON t.id = td.trip_id
+      WHERE p.name = ?
+      GROUP BY t.id, t.name, t.start_date, t.end_date, t.created_at
+      ORDER BY t.created_at DESC
+    `, [trimmedUsername]);
+    
+    // Get total trip count for stats
+    const totalTripsResult = await database.get('SELECT COUNT(*) as count FROM trips');
+    const totalTrips = totalTripsResult?.count || 0;
+    
+    // Transform trips and add participation metadata
+    const transformedTrips = [];
+    for (const trip of userTrips) {
+      // Get all participants for this trip
+      const participants = await database.all(
+        'SELECT name FROM participants WHERE trip_id = ? ORDER BY name',
+        [trip.id]
+      );
+      
+      transformedTrips.push({
+        ...trip,
+        destinations: trip.destinations ? trip.destinations.split(',') : [],
+        participants: participants.map(p => p.name),
+        isUserParticipant: true,
+        userRole: 'participant' // future enhancement
+      });
+    }
+    
+    res.json({
+      userTrips: transformedTrips,
+      totalUserTrips: transformedTrips.length,
+      totalAllTrips: totalTrips
+    });
+    
+  } catch (error) {
+    console.error('Error fetching user trips:', error);
+    res.status(500).json({ error: 'Failed to fetch user trips' });
+  }
+});
+
 // GET /api/trips/participants/search - Search for existing participants
 router.get('/participants/search', async (req, res) => {
   try {

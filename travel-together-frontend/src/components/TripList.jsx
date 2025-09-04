@@ -1,11 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { tripApi, transformTripForFrontend } from '../services/api';
+import { useUserTripFiltering } from '../hooks/useUserTripFiltering';
+import TripFilterToggle from './common/TripFilterToggle';
+import TripContextMessage from './common/TripContextMessage';
 
 const TripList = () => {
   const [allTrips, setAllTrips] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  
+  // Use the reusable filtering hook
+  const {
+    filteredTrips,
+    tripStats,
+    viewMode,
+    setViewMode,
+    isUserParticipant,
+    username,
+    isLoggedIn
+  } = useUserTripFiltering(allTrips);
+
+  // Render function for participant highlighting
+  const renderParticipant = (participant, index, participants) => (
+    <span 
+      key={index}
+      className={participant === username ? 'text-blue-600 font-semibold' : 'text-gray-700'}
+    >
+      {participant === username ? `${participant} (you)` : participant}
+      {index < participants.length - 1 && ', '}
+    </span>
+  );
 
   // Load all trips from API on component mount
   useEffect(() => {
@@ -29,14 +54,6 @@ const TripList = () => {
     fetchTrips();
   }, []);
 
-  // Helper function to check if trip was created by current user
-  const isUserTrip = (trip) => {
-    // For now, we'll consider any trip created in the last hour as a "user trip"
-    // In a real app, this would be based on user authentication
-    const createdDate = new Date(trip.createdAt);
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
-    return createdDate > oneHourAgo;
-  };
 
   // Helper function to format date for display
   const formatDate = (dateString) => {
@@ -48,9 +65,6 @@ const TripList = () => {
     });
   };
 
-  // Separate user trips from sample trips based on creation time
-  const userTrips = allTrips.filter(isUserTrip);
-  const sampleTrips = allTrips.filter(trip => !isUserTrip(trip));
 
   // Loading state
   if (loading) {
@@ -86,116 +100,111 @@ const TripList = () => {
   }
 
   return (
-    <div>
-      {userTrips.length > 0 && (
-        <>
-          <h2 style={{ color: '#f97316', marginBottom: '1rem' }}>Your Created Trips</h2>
-          <ul style={{listStyle: 'none', padding: 0, marginBottom: '2rem'}}>
-            {userTrips.map(trip => (
-              <li key={trip.id}>
-                <Link 
-                  to={`/trips/${trip.id}`} 
-                  style={{ 
-                    textDecoration: 'none', 
-                    color: 'inherit',
-                    display: 'block',
-                    padding: '1rem',
-                    border: '2px solid #f97316',
-                    borderRadius: '0.5rem',
-                    marginBottom: '1rem',
-                    background: 'linear-gradient(135deg, rgba(249, 115, 22, 0.1), rgba(249, 115, 22, 0.05))',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.target.style.background = 'linear-gradient(135deg, rgba(249, 115, 22, 0.2), rgba(249, 115, 22, 0.1))';
-                    e.target.style.transform = 'translateY(-2px)';
-                    e.target.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.15)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.target.style.background = 'linear-gradient(135deg, rgba(249, 115, 22, 0.1), rgba(249, 115, 22, 0.05))';
-                    e.target.style.transform = 'translateY(0)';
-                    e.target.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
-                  }}
-                >
-                  <div>
-                    <strong>{trip.name}</strong>
-                    <span style={{ 
-                      marginLeft: '0.5rem', 
-                      fontSize: '0.75rem', 
-                      backgroundColor: '#f97316', 
-                      color: 'white', 
-                      padding: '0.25rem 0.5rem', 
-                      borderRadius: '1rem' 
-                    }}>
-                      YOUR TRIP
+    <div className="max-w-7xl mx-auto p-6 sm:p-8">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+          TravelTogether Trips
+        </h1>
+        
+        <TripContextMessage
+          isLoggedIn={isLoggedIn}
+          viewMode={viewMode}
+          tripStats={tripStats}
+          filteredTripsLength={filteredTrips.length}
+          className="mb-6"
+        />
+
+        <TripFilterToggle
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+          tripStats={tripStats}
+          isLoggedIn={isLoggedIn}
+          className="mb-6"
+        />
+      </div>
+
+
+      {/* Trip Grid */}
+      {filteredTrips.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredTrips.map(trip => (
+            <Link 
+              key={trip.id}
+              to={`/trips/${trip.id}`} 
+              className="block bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-200 overflow-hidden group"
+            >
+              <div className="p-6">
+                <div className="flex items-start justify-between mb-3">
+                  <h3 className="text-lg font-semibold text-gray-900 group-hover:text-orange-600 transition-colors">
+                    {trip.name}
+                  </h3>
+                  {isUserParticipant(trip) && (
+                    <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full font-medium">
+                      Your Trip
+                    </span>
+                  )}
+                </div>
+                
+                <div className="space-y-2 text-sm text-gray-600">
+                  <div className="flex items-center">
+                    <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {trip.destinations ? trip.destinations.join(', ') : trip.destination}
+                  </div>
+                  
+                  <div className="flex items-center">
+                    <svg className="w-4 h-4 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    {formatDate(trip.startDate)} - {formatDate(trip.endDate)}
+                  </div>
+                  
+                  <div className="flex items-start">
+                    <svg className="w-4 h-4 mr-2 mt-0.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
+                    </svg>
+                    <span className="flex flex-wrap">
+                      {trip.participants && trip.participants.map((participant, index) => 
+                        renderParticipant(participant, index, trip.participants)
+                      )}
                     </span>
                   </div>
-                  <div>Destination: {trip.destination}</div>
-                  <div>
-                    Dates: {formatDate(trip.startDate)} - {formatDate(trip.endDate)}
+                </div>
+                
+                <div className="mt-4 pt-4 border-t border-gray-100">
+                  <div className="flex items-center justify-between">
+                    <div className="flex space-x-4 text-xs text-gray-500">
+                      <span>{trip.activities?.length || 0} activities</span>
+                      <span>{trip.restaurants?.length || 0} restaurants</span>
+                    </div>
+                    <span className="text-xs text-orange-600 font-medium group-hover:text-orange-700">
+                      View Details →
+                    </span>
                   </div>
-                  <div>
-                    Participants ({trip.participants.length}): {trip.participants.join(', ')}
-                  </div>
-                  <div>
-                    <strong>Ready to plan activities and restaurants!</strong>
-                  </div> 
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-      
-      <h2>Sample Trips</h2>
-      <ul style={{listStyle: 'none',padding:0}}>
-        {sampleTrips.map(trip => (
-          <li key={trip.id}>
-             <Link 
-              to={`/trips/${trip.id}`} 
-              style={{ 
-                textDecoration: 'none', 
-                color: 'inherit',
-                display: 'block',
-                padding: '1rem',
-                border: '1px solid rgba(23, 162, 184, 0.3)',
-                borderRadius: '0.5rem',
-                marginBottom: '1rem',
-                background: 'linear-gradient(135deg, rgba(23, 162, 184, 0.1), rgba(253, 126, 20, 0.1))',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.background = 'linear-gradient(135deg, rgba(23, 162, 184, 0.2), rgba(253, 126, 20, 0.2))';
-                e.target.style.transform = 'translateY(-2px)';
-                e.target.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.15)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.background = 'linear-gradient(135deg, rgba(23, 162, 184, 0.1), rgba(253, 126, 20, 0.1))';
-                e.target.style.transform = 'translateY(0)';
-                e.target.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
-              }}
-            >
-             <div>
-                <strong>{trip.name}</strong>
+                </div>
               </div>
-              <div>Destination: {trip.destination}</div>
-              <div>
-                Dates: {formatDate(trip.startDate)} - {formatDate(trip.endDate)}
-              </div>
-              <div>
-                Participants ({trip.participants.length}): {trip.participants.join(', ')}
-              </div>
-              <div>
-                <strong>Activities ({trip.activityCount || 0}) & Restaurants ({trip.restaurantCount || 0}):</strong> Click to view details
-              </div> 
             </Link>
-            </li>
-        ))}
-      </ul>
+          ))}
+        </div>
+      )}
+
+      {/* Create New Trip Button for non-logged-in users or when viewing all trips */}
+      {(!isLoggedIn || viewMode === 'allTrips' || filteredTrips.length > 0) && (
+        <div className="mt-8 text-center">
+          <Link 
+            to="/trips/new" 
+            className="inline-flex items-center px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium"
+          >
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            </svg>
+            Create New Trip
+          </Link>
+        </div>
+      )}
     </div>
   );
 };

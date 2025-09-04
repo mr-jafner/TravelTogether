@@ -5,6 +5,10 @@ import {
   Plus, Calendar, Map, Heart, Share2, Vote, 
   AlertTriangle, CheckCircle, Clock, Camera
 } from 'lucide-react';
+import { tripApi, transformTripForFrontend } from '../../services/api';
+import { useUserTripFiltering } from '../../hooks/useUserTripFiltering';
+import TripFilterToggle from '../../components/common/TripFilterToggle';
+import { getTripContextMessage } from '../../components/common/TripContextMessage';
 
 // Demo data matching the MVP prototype
 const demoData = {
@@ -86,9 +90,19 @@ const demoData = {
 
 function HomeDashboard() {
   const navigate = useNavigate();
+  const [allTrips, setAllTrips] = useState([]);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('map');
+  
+  // Use the reusable filtering hook
+  const {
+    filteredTrips: filteredTripData,
+    tripStats,
+    viewMode,
+    setViewMode,
+    isLoggedIn
+  } = useUserTripFiltering(allTrips);
 
   // Transform backend trip data to dashboard format
   const transformTripData = (trips) => {
@@ -134,9 +148,11 @@ function HomeDashboard() {
           }, 500);
         } else {
           // Fetch real trip data from backend
-          const response = await fetch('https://jafner.com/traveltogether/api/trips');
-          const trips = await response.json();
-          const dashboardData = transformTripData(trips);
+          const trips = await tripApi.getAllTrips();
+          const transformedTrips = trips.map(transformTripForFrontend);
+          setAllTrips(transformedTrips);
+          
+          const dashboardData = transformTripData(transformedTrips);
           setData(dashboardData);
           setLoading(false);
         }
@@ -201,11 +217,21 @@ function HomeDashboard() {
       <header className="sticky top-0 z-10 bg-white/90 backdrop-blur-sm border-b border-gray-200">
         <div className="max-w-6xl mx-auto px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between flex-wrap gap-3">
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
               <h1 className="text-lg sm:text-xl font-semibold text-gray-900">TravelTogether</h1>
               <span className="px-2 sm:px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs sm:text-sm">
                 Dashboard
               </span>
+              
+              {/* Trip Filter Toggle */}
+              <TripFilterToggle
+                viewMode={viewMode}
+                setViewMode={setViewMode}
+                tripStats={tripStats}
+                isLoggedIn={isLoggedIn}
+                size="small"
+                className="ml-2"
+              />
             </div>
             <div className="flex gap-1 sm:gap-2 flex-wrap">
               <button 
@@ -237,11 +263,18 @@ function HomeDashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          <h2 className="text-lg font-semibold text-gray-900 mb-2">Upcoming Trips</h2>
-          <p className="text-gray-600 text-sm mb-6">Your next adventures at a glance.</p>
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">
+            {viewMode === 'myTrips' ? 'My Upcoming Trips' : 'All Upcoming Trips'}
+          </h2>
+          <p className="text-gray-600 text-sm mb-6">
+            {import.meta.env.VITE_DEMO_MODE === 'true' 
+              ? 'Your next adventures at a glance.'
+              : getTripContextMessage(isLoggedIn, viewMode, tripStats)
+            }
+          </p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 overflow-x-auto">
-            {data.trips.map((trip, index) => (
+            {(import.meta.env.VITE_DEMO_MODE === 'true' ? data.trips : transformTripData(filteredTripData).trips).map((trip, index) => (
               <motion.div
                 key={trip.id}
                 className="bg-gradient-to-b from-blue-50 to-white border border-blue-100 rounded-2xl p-4 min-w-0"

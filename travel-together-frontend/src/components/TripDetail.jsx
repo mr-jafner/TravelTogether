@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import { useUser } from '../contexts/UserContext';
 import ActivityRating from './ActivityRating';
 import RestaurantRating from './RestaurantRating';
 import ActivityForm from './ActivityForm';
@@ -17,6 +18,7 @@ import GroupAnalysisTab from './GroupAnalysisTab';
 
 const TripDetail = () => {
   const { tripId } = useParams();
+  const { username, isLoggedIn } = useUser();
   const [showActivityForm, setShowActivityForm] = useState(false);
   const [showRestaurantForm, setShowRestaurantForm] = useState(false);
   const [currentTrip, setCurrentTrip] = useState(null);
@@ -128,6 +130,12 @@ const TripDetail = () => {
   };
 
   const trip = currentTrip;
+
+  // Check if current user is a participant in this trip
+  const isUserParticipant = useMemo(() => {
+    if (!isLoggedIn || !username || !trip?.participants) return false;
+    return trip.participants.includes(username);
+  }, [username, isLoggedIn, trip?.participants]);
 
   // Initialize rating states with simple vote counts from API
   const [activityRatings, setActivityRatings] = useState({});
@@ -423,24 +431,33 @@ const TripDetail = () => {
                     </svg>
                     <span className='hidden md:inline'>Export</span>
                   </button>
-                  <button
-                    onClick={handleEditTrip}
-                    className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-                  >
-                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                    <span className='hidden md:inline'>Edit</span>
-                  </button>
-                  <button
-                    onClick={handleDeleteTrip}
-                    className="inline-flex items-center px-3 py-2 text-sm font-medium text-red-700 bg-red-100 hover:bg-red-200 rounded-lg transition-colors"
-                  >
-                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                    <span className='hidden md:inline'>Delete</span>
-                  </button>
+                  {(isUserParticipant || !isLoggedIn) && (
+                    <>
+                      <button
+                        onClick={handleEditTrip}
+                        className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                      >
+                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        <span className='hidden md:inline'>Edit</span>
+                      </button>
+                      <button
+                        onClick={handleDeleteTrip}
+                        className="inline-flex items-center px-3 py-2 text-sm font-medium text-red-700 bg-red-100 hover:bg-red-200 rounded-lg transition-colors"
+                      >
+                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        <span className='hidden md:inline'>Delete</span>
+                      </button>
+                    </>
+                  )}
+                  {!isUserParticipant && isLoggedIn && (
+                    <div className="text-sm text-gray-500 italic px-3 py-2">
+                      Join this trip to edit details
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="flex items-center text-lg text-gray-600 mb-4">
@@ -533,7 +550,7 @@ const TripDetail = () => {
               </svg>
               Participants ({editingParticipants ? participantNames.length : trip.participants.length})
             </h3>
-            {!editingParticipants && (
+            {!editingParticipants && (isUserParticipant || !isLoggedIn) && (
               <button
                 onClick={startEditingParticipants}
                 className="px-3 py-1 text-sm bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-lg transition-colors flex items-center"
@@ -610,7 +627,11 @@ const TripDetail = () => {
                   <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium text-sm mr-3">
                     {participant.split(' ').map(n => n[0]).join('')}
                   </div>
-                  <span className="text-gray-900 font-medium">{participant}</span>
+                  <span className={`font-medium ${
+                    participant === username ? 'text-blue-600' : 'text-gray-900'
+                  }`}>
+                    {participant === username ? `${participant} (you)` : participant}
+                  </span>
                 </div>
               ))}
             </div>
