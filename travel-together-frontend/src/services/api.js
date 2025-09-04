@@ -208,7 +208,7 @@ export const tripApi = {
 
 // Rating API endpoints
 export const ratingApi = {
-  // Rate an activity
+  // Rate an activity (legacy - requires participantName in body)
   rateActivity: async (tripId, activityId, participantName, rating) => {
     return apiRequest(`/trips/${tripId}/activities/${activityId}/rate`, {
       method: 'POST',
@@ -216,7 +216,15 @@ export const ratingApi = {
     });
   },
 
-  // Rate a restaurant
+  // Rate an activity as logged-in user (enhanced - uses username from URL)
+  rateActivityAsUser: async (tripId, activityId, username, rating) => {
+    return apiRequest(`/trips/${tripId}/activities/${activityId}/rate/${encodeURIComponent(username)}`, {
+      method: 'POST',
+      body: JSON.stringify({ rating }),
+    });
+  },
+
+  // Rate a restaurant (legacy - requires participantName in body)
   rateRestaurant: async (tripId, restaurantId, participantName, rating) => {
     return apiRequest(`/trips/${tripId}/restaurants/${restaurantId}/rate`, {
       method: 'POST',
@@ -224,7 +232,15 @@ export const ratingApi = {
     });
   },
 
-  // Get activity ratings
+  // Rate a restaurant as logged-in user (enhanced - uses username from URL)
+  rateRestaurantAsUser: async (tripId, restaurantId, username, rating) => {
+    return apiRequest(`/trips/${tripId}/restaurants/${restaurantId}/rate/${encodeURIComponent(username)}`, {
+      method: 'POST',
+      body: JSON.stringify({ rating }),
+    });
+  },
+
+  // Get activity ratings (legacy - returns object format)
   getActivityRatings: async (tripId, activityId) => {
     const ratingsArray = await apiRequest(`/trips/${tripId}/activities/${activityId}/ratings`);
     
@@ -237,7 +253,25 @@ export const ratingApi = {
     return ratingsObject;
   },
 
-  // Get restaurant ratings
+  // Get activity ratings with user context (enhanced - includes user vs group stats)
+  getActivityRatingsWithUser: async (tripId, activityId, username) => {
+    const data = await apiRequest(`/trips/${tripId}/activities/${activityId}/ratings/${encodeURIComponent(username)}`);
+    
+    // Transform allRatings array to object format for backward compatibility
+    const ratingsObject = {};
+    data.allRatings.forEach(ratingData => {
+      ratingsObject[ratingData.participant_name] = ratingData.rating;
+    });
+    
+    return {
+      ratings: ratingsObject, // Backward compatible format
+      userRating: data.userRating,
+      groupAverage: data.groupAverage,
+      totalRatings: data.totalRatings
+    };
+  },
+
+  // Get restaurant ratings (legacy - returns object format)
   getRestaurantRatings: async (tripId, restaurantId) => {
     const ratingsArray = await apiRequest(`/trips/${tripId}/restaurants/${restaurantId}/ratings`);
     
@@ -248,6 +282,24 @@ export const ratingApi = {
     });
     
     return ratingsObject;
+  },
+
+  // Get restaurant ratings with user context (enhanced - includes user vs group stats)
+  getRestaurantRatingsWithUser: async (tripId, restaurantId, username) => {
+    const data = await apiRequest(`/trips/${tripId}/restaurants/${restaurantId}/ratings/${encodeURIComponent(username)}`);
+    
+    // Transform allRatings array to object format for backward compatibility
+    const ratingsObject = {};
+    data.allRatings.forEach(ratingData => {
+      ratingsObject[ratingData.participant_name] = ratingData.rating;
+    });
+    
+    return {
+      ratings: ratingsObject, // Backward compatible format
+      userRating: data.userRating,
+      groupAverage: data.groupAverage,
+      totalRatings: data.totalRatings
+    };
   },
 };
 

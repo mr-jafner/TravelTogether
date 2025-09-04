@@ -1,21 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ratingApi, tripApi } from '../services/api';
+import { useUser } from '../contexts/UserContext';
 
-const ActivityRating = ({ activity, participants, currentUser, onRatingChange, tripId, ratings = {}, onEditActivity, onDeleteActivity }) => {
+const ActivityRating = ({ activity, participants, onRatingChange, tripId, ratings = {}, onEditActivity, onDeleteActivity }) => {
+  const { username: loggedInUser, isLoggedIn } = useUser();
+  const [userRating, setUserRating] = useState(null);
+  const [groupAverage, setGroupAverage] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState({});
   // Use parent's ratings state instead of local state
 
+  // Load user-specific rating data on component mount
+  useEffect(() => {
+    const loadRatingData = async () => {
+      if (!isLoggedIn || !tripId || !activity.id) return;
+      
+      try {
+        const data = await ratingApi.getActivityRatingsWithUser(tripId, activity.id, loggedInUser);
+        setUserRating(data.userRating);
+        setGroupAverage(data.groupAverage);
+      } catch (error) {
+        console.error('Failed to load activity rating data:', error);
+      }
+    };
+    
+    loadRatingData();
+  }, [tripId, activity.id, loggedInUser, isLoggedIn]);
+
   const handleRatingClick = async (participant, rating) => {
     // Only allow editing current user's rating
-    if (participant !== currentUser) return;
+    if (participant !== loggedInUser) return;
     
     try {
-      // Update rating via API
-      if (tripId) {
-        await ratingApi.rateActivity(tripId, activity.id, participant, rating);
+      // Update rating via enhanced API
+      if (tripId && isLoggedIn) {
+        const response = await ratingApi.rateActivityAsUser(tripId, activity.id, loggedInUser, rating);
+        setUserRating(response.userRating);
+        setGroupAverage(response.groupAverage);
       }
       
+      // Update local ratings state for backward compatibility
       const newRatings = { ...ratings, [participant]: rating };
       if (onRatingChange) {
         onRatingChange(newRatings);
@@ -188,12 +212,28 @@ const ActivityRating = ({ activity, participants, currentUser, onRatingChange, t
             </div>
           </div>
           <div className="text-center lg:text-right lg:ml-4">
-            <div className={`text-2xl font-bold ${currentConfig.textColor}`}>
-              {averageRating.toFixed(1)}/5
-            </div>
-            <div className="text-sm text-gray-500">
-              {interestedCount}/{participants.length} interested
-            </div>
+            {isLoggedIn && (userRating !== null || groupAverage !== null) ? (
+              <div className="space-y-1">
+                <div className="text-lg font-bold text-blue-600">
+                  Your Rating: {userRating !== null ? `${userRating}/5` : 'Not rated'}
+                </div>
+                <div className={`text-2xl font-bold ${currentConfig.textColor}`}>
+                  Group: {groupAverage !== null ? `${groupAverage}/5` : `${averageRating.toFixed(1)}/5`}
+                </div>
+                <div className="text-sm text-gray-500">
+                  {interestedCount}/{participants.length} interested
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                <div className={`text-2xl font-bold ${currentConfig.textColor}`}>
+                  {averageRating.toFixed(1)}/5
+                </div>
+                <div className="text-sm text-gray-500">
+                  {interestedCount}/{participants.length} interested
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -297,7 +337,7 @@ const ActivityRating = ({ activity, participants, currentUser, onRatingChange, t
         <div className="text-sm font-semibold text-gray-700 mb-3">Individual Ratings:</div>
         
         {/* Current User - Full Rating Scale */}
-        {participants.filter(p => p === currentUser).map(participant => {
+        {isLoggedIn && participants.includes(loggedInUser) && participants.filter(p => p === loggedInUser).map(participant => {
           const participantRating = ratings[participant];
           const participantConfig = participantRating !== undefined && participantRating !== null 
             ? ratingConfig[participantRating] || ratingConfig[2] 
@@ -349,7 +389,7 @@ const ActivityRating = ({ activity, participants, currentUser, onRatingChange, t
         
         {/* Other Participants - Compact Grid */}
         {(() => {
-          const otherParticipants = participants.filter(p => p !== currentUser);
+          const otherParticipants = participants.filter(p => p !== loggedInUser);
           if (otherParticipants.length === 0) return null;
           
           return (

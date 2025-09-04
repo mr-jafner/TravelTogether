@@ -6,7 +6,7 @@ const Trip = require('../models/Trip.js');
 // Initialize trip model
 const tripModel = new Trip(database);
 
-// POST /api/trips/:tripId/activities/:activityId/rate - Rate an activity
+// POST /api/trips/:tripId/activities/:activityId/rate - Rate an activity (legacy - supports participantName)
 router.post('/trips/:tripId/activities/:activityId/rate', async (req, res) => {
   try {
     const tripId = parseInt(req.params.tripId);
@@ -53,7 +53,77 @@ router.post('/trips/:tripId/activities/:activityId/rate', async (req, res) => {
   }
 });
 
-// POST /api/trips/:tripId/restaurants/:restaurantId/rate - Rate a restaurant
+// POST /api/trips/:tripId/activities/:activityId/rate/:username - Rate an activity as specific user
+router.post('/trips/:tripId/activities/:activityId/rate/:username', async (req, res) => {
+  try {
+    const tripId = parseInt(req.params.tripId);
+    const activityId = parseInt(req.params.activityId);
+    const username = req.params.username;
+    const { rating } = req.body;
+
+    // Validate parameters
+    if (isNaN(tripId)) {
+      return res.status(400).json({ error: 'Invalid trip ID' });
+    }
+    if (isNaN(activityId)) {
+      return res.status(400).json({ error: 'Invalid activity ID' });
+    }
+    if (!username) {
+      return res.status(400).json({ error: 'Username is required' });
+    }
+    if (rating === undefined || rating < 0 || rating > 5) {
+      return res.status(400).json({ error: 'Rating must be between 0 and 5' });
+    }
+
+    // Check if trip exists
+    const trip = await tripModel.getById(tripId);
+    if (!trip) {
+      return res.status(404).json({ error: 'Trip not found' });
+    }
+
+    // Check if activity exists in the trip
+    const activity = trip.activities.find(a => a.id === activityId);
+    if (!activity) {
+      return res.status(404).json({ error: 'Activity not found in this trip' });
+    }
+
+    // Check if username exists as participant in the trip
+    if (!trip.participants.includes(username)) {
+      return res.status(403).json({ error: 'User is not a participant in this trip' });
+    }
+
+    await tripModel.rateActivity(tripId, activityId, username, parseInt(rating));
+
+    // Get updated ratings to return comprehensive response
+    const ratings = await database.all(`
+      SELECT 
+        ar.rating,
+        p.name as participant_name,
+        ar.created_at
+      FROM activity_ratings ar
+      JOIN participants p ON ar.participant_id = p.id
+      WHERE ar.activity_id = ? AND p.trip_id = ?
+      ORDER BY ar.created_at DESC
+    `, [activityId, tripId]);
+
+    // Calculate user vs group stats
+    const userRating = ratings.find(r => r.participant_name === username)?.rating;
+    const groupAverage = ratings.length > 0 ? 
+      ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length : null;
+
+    res.json({ 
+      message: 'Activity rated successfully',
+      userRating,
+      groupAverage: groupAverage ? parseFloat(groupAverage.toFixed(1)) : null,
+      totalRatings: ratings.length
+    });
+  } catch (error) {
+    console.error('Error rating activity:', error);
+    res.status(500).json({ error: 'Failed to rate activity' });
+  }
+});
+
+// POST /api/trips/:tripId/restaurants/:restaurantId/rate - Rate a restaurant (legacy - supports participantName)
 router.post('/trips/:tripId/restaurants/:restaurantId/rate', async (req, res) => {
   try {
     const tripId = parseInt(req.params.tripId);
@@ -100,6 +170,76 @@ router.post('/trips/:tripId/restaurants/:restaurantId/rate', async (req, res) =>
   }
 });
 
+// POST /api/trips/:tripId/restaurants/:restaurantId/rate/:username - Rate a restaurant as specific user
+router.post('/trips/:tripId/restaurants/:restaurantId/rate/:username', async (req, res) => {
+  try {
+    const tripId = parseInt(req.params.tripId);
+    const restaurantId = parseInt(req.params.restaurantId);
+    const username = req.params.username;
+    const { rating } = req.body;
+
+    // Validate parameters
+    if (isNaN(tripId)) {
+      return res.status(400).json({ error: 'Invalid trip ID' });
+    }
+    if (isNaN(restaurantId)) {
+      return res.status(400).json({ error: 'Invalid restaurant ID' });
+    }
+    if (!username) {
+      return res.status(400).json({ error: 'Username is required' });
+    }
+    if (rating === undefined || rating < 0 || rating > 5) {
+      return res.status(400).json({ error: 'Rating must be between 0 and 5' });
+    }
+
+    // Check if trip exists
+    const trip = await tripModel.getById(tripId);
+    if (!trip) {
+      return res.status(404).json({ error: 'Trip not found' });
+    }
+
+    // Check if restaurant exists in the trip
+    const restaurant = trip.restaurants.find(r => r.id === restaurantId);
+    if (!restaurant) {
+      return res.status(404).json({ error: 'Restaurant not found in this trip' });
+    }
+
+    // Check if username exists as participant in the trip
+    if (!trip.participants.includes(username)) {
+      return res.status(403).json({ error: 'User is not a participant in this trip' });
+    }
+
+    await tripModel.rateRestaurant(tripId, restaurantId, username, parseInt(rating));
+
+    // Get updated ratings to return comprehensive response
+    const ratings = await database.all(`
+      SELECT 
+        rr.rating,
+        p.name as participant_name,
+        rr.created_at
+      FROM restaurant_ratings rr
+      JOIN participants p ON rr.participant_id = p.id
+      WHERE rr.restaurant_id = ? AND p.trip_id = ?
+      ORDER BY rr.created_at DESC
+    `, [restaurantId, tripId]);
+
+    // Calculate user vs group stats
+    const userRating = ratings.find(r => r.participant_name === username)?.rating;
+    const groupAverage = ratings.length > 0 ? 
+      ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length : null;
+
+    res.json({ 
+      message: 'Restaurant rated successfully',
+      userRating,
+      groupAverage: groupAverage ? parseFloat(groupAverage.toFixed(1)) : null,
+      totalRatings: ratings.length
+    });
+  } catch (error) {
+    console.error('Error rating restaurant:', error);
+    res.status(500).json({ error: 'Failed to rate restaurant' });
+  }
+});
+
 // GET /api/trips/:tripId/activities/:activityId/ratings - Get activity ratings
 router.get('/trips/:tripId/activities/:activityId/ratings', async (req, res) => {
   try {
@@ -128,6 +268,45 @@ router.get('/trips/:tripId/activities/:activityId/ratings', async (req, res) => 
   }
 });
 
+// GET /api/trips/:tripId/activities/:activityId/ratings/:username - Get activity ratings with user context
+router.get('/trips/:tripId/activities/:activityId/ratings/:username', async (req, res) => {
+  try {
+    const tripId = parseInt(req.params.tripId);
+    const activityId = parseInt(req.params.activityId);
+    const username = req.params.username;
+
+    if (isNaN(tripId) || isNaN(activityId)) {
+      return res.status(400).json({ error: 'Invalid trip or activity ID' });
+    }
+
+    const ratings = await database.all(`
+      SELECT 
+        ar.rating,
+        p.name as participant_name,
+        ar.created_at
+      FROM activity_ratings ar
+      JOIN participants p ON ar.participant_id = p.id
+      WHERE ar.activity_id = ? AND p.trip_id = ?
+      ORDER BY ar.created_at DESC
+    `, [activityId, tripId]);
+
+    // Calculate user vs group stats
+    const userRating = ratings.find(r => r.participant_name === username)?.rating || null;
+    const groupAverage = ratings.length > 0 ? 
+      ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length : null;
+
+    res.json({
+      userRating,
+      groupAverage: groupAverage ? parseFloat(groupAverage.toFixed(1)) : null,
+      totalRatings: ratings.length,
+      allRatings: ratings
+    });
+  } catch (error) {
+    console.error('Error fetching activity ratings:', error);
+    res.status(500).json({ error: 'Failed to fetch activity ratings' });
+  }
+});
+
 // GET /api/trips/:tripId/restaurants/:restaurantId/ratings - Get restaurant ratings
 router.get('/trips/:tripId/restaurants/:restaurantId/ratings', async (req, res) => {
   try {
@@ -150,6 +329,45 @@ router.get('/trips/:tripId/restaurants/:restaurantId/ratings', async (req, res) 
     `, [restaurantId, tripId]);
 
     res.json(ratings);
+  } catch (error) {
+    console.error('Error fetching restaurant ratings:', error);
+    res.status(500).json({ error: 'Failed to fetch restaurant ratings' });
+  }
+});
+
+// GET /api/trips/:tripId/restaurants/:restaurantId/ratings/:username - Get restaurant ratings with user context
+router.get('/trips/:tripId/restaurants/:restaurantId/ratings/:username', async (req, res) => {
+  try {
+    const tripId = parseInt(req.params.tripId);
+    const restaurantId = parseInt(req.params.restaurantId);
+    const username = req.params.username;
+
+    if (isNaN(tripId) || isNaN(restaurantId)) {
+      return res.status(400).json({ error: 'Invalid trip or restaurant ID' });
+    }
+
+    const ratings = await database.all(`
+      SELECT 
+        rr.rating,
+        p.name as participant_name,
+        rr.created_at
+      FROM restaurant_ratings rr
+      JOIN participants p ON rr.participant_id = p.id
+      WHERE rr.restaurant_id = ? AND p.trip_id = ?
+      ORDER BY rr.created_at DESC
+    `, [restaurantId, tripId]);
+
+    // Calculate user vs group stats
+    const userRating = ratings.find(r => r.participant_name === username)?.rating || null;
+    const groupAverage = ratings.length > 0 ? 
+      ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length : null;
+
+    res.json({
+      userRating,
+      groupAverage: groupAverage ? parseFloat(groupAverage.toFixed(1)) : null,
+      totalRatings: ratings.length,
+      allRatings: ratings
+    });
   } catch (error) {
     console.error('Error fetching restaurant ratings:', error);
     res.status(500).json({ error: 'Failed to fetch restaurant ratings' });
