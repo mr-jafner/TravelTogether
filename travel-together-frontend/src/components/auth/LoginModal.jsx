@@ -163,6 +163,10 @@ const LoginModal = ({ isOpen, onClose }) => {
                   value={username}
                   onChange={handleUsernameChange}
                   onFocus={() => !isCustomUsername && setShowSuggestions(true)}
+                  onBlur={() => {
+                    // Use setTimeout to allow click events to fire before hiding suggestions
+                    setTimeout(() => setShowSuggestions(false), 200);
+                  }}
                   placeholder={isCustomUsername ? 'Enter a new username...' : 'Type to search or select below...'}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   disabled={isLoading}
@@ -176,7 +180,7 @@ const LoginModal = ({ isOpen, onClose }) => {
                       <button
                         key={index}
                         type="button"
-                        onClick={() => handleSuggestionSelect(suggestion)}
+                        onMouseDown={() => handleSuggestionSelect(suggestion)}
                         className="w-full px-4 py-2 text-left hover:bg-blue-50 focus:bg-blue-50 focus:outline-none border-b border-gray-100 last:border-b-0"
                       >
                         <span className="font-medium">{suggestion}</span>
