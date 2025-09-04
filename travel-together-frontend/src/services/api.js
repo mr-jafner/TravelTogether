@@ -45,13 +45,14 @@ export const tripApi = {
   },
 
   // Create new trip
-  createTrip: async (tripData) => {
+  createTrip: async (tripData, createdBy) => {
     // Convert single destination to array format for backend
     const backendTripData = {
       ...tripData,
       destinations: Array.isArray(tripData.destinations) 
         ? tripData.destinations 
-        : [tripData.destination || tripData.destinations]
+        : [tripData.destination || tripData.destinations],
+      createdBy: createdBy // Add creator information
     };
 
     return apiRequest('/trips', {
@@ -60,8 +61,8 @@ export const tripApi = {
     });
   },
 
-  // Update trip  
-  updateTrip: async (tripId, tripData) => {
+  // Update trip (creator only)
+  updateTrip: async (tripId, tripData, username) => {
     const backendTripData = { ...tripData };
     
     // Convert single destination to array format for backend, but only if destinations are provided
@@ -71,22 +72,22 @@ export const tripApi = {
         : [tripData.destination || tripData.destinations];
     }
 
-    return apiRequest(`/trips/${tripId}`, {
+    return apiRequest(`/trips/${tripId}?username=${encodeURIComponent(username)}`, {
       method: 'PUT',
       body: JSON.stringify(backendTripData),
     });
   },
 
-  // Delete trip
-  deleteTrip: async (tripId) => {
-    return apiRequest(`/trips/${tripId}`, {
+  // Delete trip (creator only)
+  deleteTrip: async (tripId, username) => {
+    return apiRequest(`/trips/${tripId}?username=${encodeURIComponent(username)}`, {
       method: 'DELETE',
     });
   },
 
-  // Add activity to trip
-  addActivity: async (tripId, activityData) => {
-    return apiRequest(`/trips/${tripId}/activities`, {
+  // Add activity to trip (participants)
+  addActivity: async (tripId, activityData, username) => {
+    return apiRequest(`/trips/${tripId}/activities?username=${encodeURIComponent(username)}`, {
       method: 'POST',
       body: JSON.stringify(activityData),
     });
@@ -108,9 +109,9 @@ export const tripApi = {
     });
   },
 
-  // Delete activity
-  deleteActivity: async (tripId, activityId) => {
-    return apiRequest(`/trips/${tripId}/activities/${activityId}`, {
+  // Delete activity (participants)
+  deleteActivity: async (tripId, activityId, username) => {
+    return apiRequest(`/trips/${tripId}/activities/${activityId}?username=${encodeURIComponent(username)}`, {
       method: 'DELETE',
     });
   },
@@ -123,9 +124,9 @@ export const tripApi = {
     });
   },
 
-  // Delete restaurant
-  deleteRestaurant: async (tripId, restaurantId) => {
-    return apiRequest(`/trips/${tripId}/restaurants/${restaurantId}`, {
+  // Delete restaurant (participants)
+  deleteRestaurant: async (tripId, restaurantId, username) => {
+    return apiRequest(`/trips/${tripId}/restaurants/${restaurantId}?username=${encodeURIComponent(username)}`, {
       method: 'DELETE',
     });
   },
@@ -202,6 +203,14 @@ export const tripApi = {
   deleteLogisticsInfo: async (tripId, logisticsId) => {
     return apiRequest(`/trips/${tripId}/logistics/${logisticsId}`, {
       method: 'DELETE',
+    });
+  },
+
+  // Admin function: Change trip creator
+  changeTripCreator: async (tripId, newCreator) => {
+    return apiRequest('/trips/admin/change-creator', {
+      method: 'PUT',
+      body: JSON.stringify({ tripId, newCreator }),
     });
   },
 };

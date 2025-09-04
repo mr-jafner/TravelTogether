@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
+import useUserRole from '../hooks/useUserRole';
 import ActivityRating from './ActivityRating';
 import RestaurantRating from './RestaurantRating';
 import ActivityForm from './ActivityForm';
@@ -30,6 +31,9 @@ const TripDetail = () => {
   const [editFormData, setEditFormData] = useState({});
   const [editingParticipants, setEditingParticipants] = useState(false);
   const [participantNames, setParticipantNames] = useState([]);
+  
+  // User role and permissions
+  const { isCreator, isParticipant, canModifyTrip, canAddContent } = useUserRole(currentTrip);
   
   // Fetch trip data function (reusable)
   const fetchTripData = async () => {
@@ -115,7 +119,7 @@ const TripDetail = () => {
       // Update trip with new participants
       await tripApi.updateTrip(trip.id, {
         participants: cleanedNames
-      });
+      }, username);
 
       // Refresh trip data
       setRefreshKey(prev => prev + 1);
@@ -246,7 +250,7 @@ const TripDetail = () => {
   const handleSaveTrip = async () => {
     try {
       setError(null);
-      await tripApi.updateTrip(tripId, editFormData);
+      await tripApi.updateTrip(tripId, editFormData, username);
       await fetchTripData(); // Refresh data
       setIsEditing(false);
     } catch (error) {
@@ -261,13 +265,18 @@ const TripDetail = () => {
   };
 
   const handleDeleteTrip = async () => {
+    if (!canModifyTrip) {
+      setError('Only trip creators can delete trips');
+      return;
+    }
+
     if (!window.confirm('Are you sure you want to delete this trip? This action cannot be undone.')) {
       return;
     }
 
     try {
       setError(null);
-      await tripApi.deleteTrip(tripId);
+      await tripApi.deleteTrip(tripId, username);
       // Redirect to trip list after successful deletion
       window.location.href = '/traveltogether/trips';
     } catch (error) {

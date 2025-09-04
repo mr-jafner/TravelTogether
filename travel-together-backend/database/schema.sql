@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS trips (
     name TEXT NOT NULL,
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
+    created_by TEXT, -- Username of the trip creator
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
@@ -25,6 +26,7 @@ CREATE TABLE IF NOT EXISTS participants (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     trip_id INTEGER NOT NULL,
     name TEXT NOT NULL,
+    role TEXT DEFAULT 'participant', -- 'creator' or 'participant'
     is_current_user BOOLEAN DEFAULT 0,
     joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (trip_id) REFERENCES trips (id) ON DELETE CASCADE

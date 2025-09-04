@@ -202,6 +202,20 @@
 - **Production Deployment Verification**: Test both API endpoints and UI functionality after production deployment to ensure full system integration
 - **Documentation During Development**: Update next-steps.md and completed.md immediately after deployment while implementation details are fresh
 
+### **Standard Deployment Process (2025-09-04)**
+- **SSH Credentials**: `ssh jeff@jafner.com`
+- **Backend Deployment Path**: `/var/www/traveltogether-backend/`
+- **Frontend Deployment Path**: `/var/www/htdocs/traveltogether/`
+- **Standard Backend Deployment**:
+  1. `scp updated_file.js jeff@jafner.com:/var/www/traveltogether-backend/routes/`
+  2. `ssh jeff@jafner.com "cd /var/www/traveltogether-backend && pm2 restart traveltogether-api"`
+  3. Verify with `curl` API test
+- **Standard Frontend Deployment**:
+  1. `cd travel-together-frontend && npm run build`
+  2. `scp -r dist/* jeff@jafner.com:/var/www/htdocs/traveltogether/`
+  3. Verify site loads at https://jafner.com/traveltogether/
+- **PM2 Service Management**: `pm2 restart traveltogether-api` after backend changes
+
 ---
 
 *Follow requirements-driven development: Requirements → Implementation → Validation → Traceability*

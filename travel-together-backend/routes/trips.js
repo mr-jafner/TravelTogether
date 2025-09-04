@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const database = require('../database/init.js');
 const Trip = require('../models/Trip.js');
+const { requireTripAccess, requireCreator } = require('../middleware/permissions');
 
 // Initialize trip model
 const tripModel = new Trip(database);
@@ -127,7 +128,7 @@ router.get('/:id', async (req, res) => {
 // POST /api/trips - Create new trip
 router.post('/', async (req, res) => {
   try {
-    const { name, destinations, startDate, endDate, participants } = req.body;
+    const { name, destinations, startDate, endDate, participants, createdBy } = req.body;
 
     // Validate required fields
     if (!name || !destinations || !startDate || !endDate) {
@@ -157,13 +158,68 @@ router.post('/', async (req, res) => {
       destinations,
       startDate,
       endDate,
-      participants: participants || []
+      participants: participants || [],
+      createdBy: createdBy // Pass creator information
     });
 
     res.status(201).json(trip);
   } catch (error) {
     console.error('Error creating trip:', error);
     res.status(500).json({ error: 'Failed to create trip' });
+  }
+});
+
+// PUT /api/trips/admin/change-creator - Change trip creator (admin function)
+router.put('/admin/change-creator', async (req, res) => {
+  try {
+    const { tripId, newCreator } = req.body;
+
+    // Validate required fields
+    if (!tripId || !newCreator) {
+      return res.status(400).json({ 
+        error: 'Missing required fields: tripId, newCreator' 
+      });
+    }
+
+    // Update trip creator in trips table
+    const tripUpdateResult = await database.run(
+      'UPDATE trips SET created_by = ? WHERE id = ?',
+      [newCreator, tripId]
+    );
+
+    if (tripUpdateResult.changes === 0) {
+      return res.status(404).json({ error: 'Trip not found' });
+    }
+
+    // Update participant roles - remove creator role from all, then set new creator
+    await database.run(
+      'UPDATE participants SET role = ? WHERE trip_id = ?',
+      ['participant', tripId]
+    );
+
+    // Set new creator role
+    const participantUpdateResult = await database.run(
+      'UPDATE participants SET role = ? WHERE trip_id = ? AND name = ?',
+      ['creator', tripId, newCreator]
+    );
+
+    if (participantUpdateResult.changes === 0) {
+      // Creator is not a participant yet, add them
+      await database.run(
+        'INSERT INTO participants (trip_id, name, role) VALUES (?, ?, ?)',
+        [tripId, newCreator, 'creator']
+      );
+    }
+
+    res.json({ 
+      message: 'Trip creator changed successfully',
+      tripId: tripId,
+      newCreator: newCreator
+    });
+
+  } catch (error) {
+    console.error('Error changing trip creator:', error);
+    res.status(500).json({ error: 'Failed to change trip creator' });
   }
 });
 
@@ -209,8 +265,8 @@ router.put('/update-username', async (req, res) => {
   }
 });
 
-// PUT /api/trips/:id - Update trip
-router.put('/:id', async (req, res) => {
+// PUT /api/trips/:id - Update trip (creator only)
+router.put('/:id', requireCreator, async (req, res) => {
   try {
     const tripId = parseInt(req.params.id);
     if (isNaN(tripId)) {
@@ -279,8 +335,8 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// DELETE /api/trips/:id - Delete trip
-router.delete('/:id', async (req, res) => {
+// DELETE /api/trips/:id - Delete trip (creator only)
+router.delete('/:id', requireCreator, async (req, res) => {
   try {
     const tripId = parseInt(req.params.id);
     if (isNaN(tripId)) {
@@ -299,8 +355,8 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-// POST /api/trips/:id/activities - Add activity to trip
-router.post('/:id/activities', async (req, res) => {
+// POST /api/trips/:id/activities - Add activity to trip (participants)
+router.post('/:id/activities', requireTripAccess, async (req, res) => {
   try {
     const tripId = parseInt(req.params.id);
     if (isNaN(tripId)) {
@@ -337,8 +393,8 @@ router.post('/:id/activities', async (req, res) => {
   }
 });
 
-// POST /api/trips/:id/restaurants - Add restaurant to trip
-router.post('/:id/restaurants', async (req, res) => {
+// POST /api/trips/:id/restaurants - Add restaurant to trip (participants)
+router.post('/:id/restaurants', requireTripAccess, async (req, res) => {
   try {
     const tripId = parseInt(req.params.id);
     if (isNaN(tripId)) {
@@ -377,8 +433,8 @@ router.post('/:id/restaurants', async (req, res) => {
   }
 });
 
-// PUT /api/trips/:id/activities/:activityId - Update activity
-router.put('/:id/activities/:activityId', async (req, res) => {
+// PUT /api/trips/:id/activities/:activityId - Update activity (participants)
+router.put('/:id/activities/:activityId', requireTripAccess, async (req, res) => {
   try {
     const tripId = parseInt(req.params.id);
     const activityId = parseInt(req.params.activityId);
@@ -412,8 +468,8 @@ router.put('/:id/activities/:activityId', async (req, res) => {
   }
 });
 
-// DELETE /api/trips/:id/activities/:activityId - Delete activity
-router.delete('/:id/activities/:activityId', async (req, res) => {
+// DELETE /api/trips/:id/activities/:activityId - Delete activity (participants)
+router.delete('/:id/activities/:activityId', requireTripAccess, async (req, res) => {
   try {
     const tripId = parseInt(req.params.id);
     const activityId = parseInt(req.params.activityId);
@@ -440,8 +496,8 @@ router.delete('/:id/activities/:activityId', async (req, res) => {
   }
 });
 
-// PUT /api/trips/:id/restaurants/:restaurantId - Update restaurant
-router.put('/:id/restaurants/:restaurantId', async (req, res) => {
+// PUT /api/trips/:id/restaurants/:restaurantId - Update restaurant (participants)
+router.put('/:id/restaurants/:restaurantId', requireTripAccess, async (req, res) => {
   try {
     const tripId = parseInt(req.params.id);
     const restaurantId = parseInt(req.params.restaurantId);
@@ -477,8 +533,8 @@ router.put('/:id/restaurants/:restaurantId', async (req, res) => {
   }
 });
 
-// DELETE /api/trips/:id/restaurants/:restaurantId - Delete restaurant
-router.delete('/:id/restaurants/:restaurantId', async (req, res) => {
+// DELETE /api/trips/:id/restaurants/:restaurantId - Delete restaurant (participants)
+router.delete('/:id/restaurants/:restaurantId', requireTripAccess, async (req, res) => {
   try {
     const tripId = parseInt(req.params.id);
     const restaurantId = parseInt(req.params.restaurantId);
@@ -522,8 +578,8 @@ router.get('/:id/travel', async (req, res) => {
   }
 });
 
-// POST /api/trips/:id/travel - Add travel information
-router.post('/:id/travel', async (req, res) => {
+// POST /api/trips/:id/travel - Add travel information (participants)
+router.post('/:id/travel', requireTripAccess, async (req, res) => {
   try {
     const tripId = parseInt(req.params.id);
     if (isNaN(tripId)) {
@@ -548,8 +604,8 @@ router.post('/:id/travel', async (req, res) => {
   }
 });
 
-// PUT /api/trips/:id/travel/:travelId - Update travel information
-router.put('/:id/travel/:travelId', async (req, res) => {
+// PUT /api/trips/:id/travel/:travelId - Update travel information (participants)
+router.put('/:id/travel/:travelId', requireTripAccess, async (req, res) => {
   try {
     const tripId = parseInt(req.params.id);
     const travelId = parseInt(req.params.travelId);
@@ -576,8 +632,8 @@ router.put('/:id/travel/:travelId', async (req, res) => {
   }
 });
 
-// DELETE /api/trips/:id/travel/:travelId - Delete travel information
-router.delete('/:id/travel/:travelId', async (req, res) => {
+// DELETE /api/trips/:id/travel/:travelId - Delete travel information (participants)
+router.delete('/:id/travel/:travelId', requireTripAccess, async (req, res) => {
   try {
     const tripId = parseInt(req.params.id);
     const travelId = parseInt(req.params.travelId);
@@ -615,8 +671,8 @@ router.get('/:id/lodging', async (req, res) => {
   }
 });
 
-// POST /api/trips/:id/lodging - Add lodging information
-router.post('/:id/lodging', async (req, res) => {
+// POST /api/trips/:id/lodging - Add lodging information (participants)
+router.post('/:id/lodging', requireTripAccess, async (req, res) => {
   try {
     const tripId = parseInt(req.params.id);
     if (isNaN(tripId)) {
@@ -641,8 +697,8 @@ router.post('/:id/lodging', async (req, res) => {
   }
 });
 
-// PUT /api/trips/:id/lodging/:lodgingId - Update lodging information
-router.put('/:id/lodging/:lodgingId', async (req, res) => {
+// PUT /api/trips/:id/lodging/:lodgingId - Update lodging information (participants)
+router.put('/:id/lodging/:lodgingId', requireTripAccess, async (req, res) => {
   try {
     const tripId = parseInt(req.params.id);
     const lodgingId = parseInt(req.params.lodgingId);
@@ -669,8 +725,8 @@ router.put('/:id/lodging/:lodgingId', async (req, res) => {
   }
 });
 
-// DELETE /api/trips/:id/lodging/:lodgingId - Delete lodging information
-router.delete('/:id/lodging/:lodgingId', async (req, res) => {
+// DELETE /api/trips/:id/lodging/:lodgingId - Delete lodging information (participants)
+router.delete('/:id/lodging/:lodgingId', requireTripAccess, async (req, res) => {
   try {
     const tripId = parseInt(req.params.id);
     const lodgingId = parseInt(req.params.lodgingId);
@@ -708,8 +764,8 @@ router.get('/:id/logistics', async (req, res) => {
   }
 });
 
-// POST /api/trips/:id/logistics - Add logistics information
-router.post('/:id/logistics', async (req, res) => {
+// POST /api/trips/:id/logistics - Add logistics information (participants)
+router.post('/:id/logistics', requireTripAccess, async (req, res) => {
   try {
     const tripId = parseInt(req.params.id);
     if (isNaN(tripId)) {
@@ -733,8 +789,8 @@ router.post('/:id/logistics', async (req, res) => {
   }
 });
 
-// PUT /api/trips/:id/logistics/:logisticsId - Update logistics information
-router.put('/:id/logistics/:logisticsId', async (req, res) => {
+// PUT /api/trips/:id/logistics/:logisticsId - Update logistics information (participants)
+router.put('/:id/logistics/:logisticsId', requireTripAccess, async (req, res) => {
   try {
     const tripId = parseInt(req.params.id);
     const logisticsId = parseInt(req.params.logisticsId);
@@ -760,8 +816,8 @@ router.put('/:id/logistics/:logisticsId', async (req, res) => {
   }
 });
 
-// DELETE /api/trips/:id/logistics/:logisticsId - Delete logistics information
-router.delete('/:id/logistics/:logisticsId', async (req, res) => {
+// DELETE /api/trips/:id/logistics/:logisticsId - Delete logistics information (participants)
+router.delete('/:id/logistics/:logisticsId', requireTripAccess, async (req, res) => {
   try {
     const tripId = parseInt(req.params.id);
     const logisticsId = parseInt(req.params.logisticsId);

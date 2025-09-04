@@ -1,20 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useUser } from '../contexts/UserContext';
 import { tripApi } from '../services/api';
 import ParticipantAutocompleteInput from './common/ParticipantAutocompleteInput';
 
 const TripCreation = () => {
   const navigate = useNavigate();
+  const { username } = useUser();
   const [formData, setFormData] = useState({
     name: '',
     destination: '',
     startDate: '',
     endDate: '',
-    participants: ['You'] // Start with current user
+    participants: [username || 'You'] // Start with current user's actual username
   });
   const [newParticipant, setNewParticipant] = useState('');
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+
+  // Update participants when username is available
+  useEffect(() => {
+    if (username && formData.participants[0] !== username) {
+      setFormData(prev => ({
+        ...prev,
+        participants: [username, ...prev.participants.slice(1)]
+      }));
+    }
+  }, [username]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -43,7 +55,7 @@ const TripCreation = () => {
   };
 
   const removeParticipant = (participantToRemove) => {
-    if (participantToRemove === 'You') return; // Don't allow removing current user
+    if (participantToRemove === username) return; // Don't allow removing current user
     setFormData(prev => ({
       ...prev,
       participants: prev.participants.filter(p => p !== participantToRemove)
@@ -96,7 +108,7 @@ const TripCreation = () => {
         };
 
         // Create trip via API
-        const createdTrip = await tripApi.createTrip(tripData);
+        const createdTrip = await tripApi.createTrip(tripData, username);
         
         // Navigate to the new trip detail page
         navigate(`/trips/${createdTrip.id}`);
@@ -249,13 +261,13 @@ const TripCreation = () => {
                 <div
                   key={index}
                   className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                    participant === 'You' 
+                    participant === username 
                       ? 'bg-blue-100 text-blue-800 border border-blue-200' 
                       : 'bg-gray-100 text-gray-700'
                   }`}
                 >
-                  {participant}
-                  {participant !== 'You' && (
+                  {participant === username ? `${participant} (you)` : participant}
+                  {participant !== username && (
                     <button
                       type="button"
                       onClick={() => removeParticipant(participant)}

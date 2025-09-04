@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const database = require('../database/init.js');
 const Trip = require('../models/Trip.js');
+const { requireTripAccess } = require('../middleware/permissions');
 
 // Initialize trip model
 const tripModel = new Trip(database);
@@ -54,7 +55,7 @@ router.post('/trips/:tripId/activities/:activityId/rate', async (req, res) => {
 });
 
 // POST /api/trips/:tripId/activities/:activityId/rate/:username - Rate an activity as specific user
-router.post('/trips/:tripId/activities/:activityId/rate/:username', async (req, res) => {
+router.post('/trips/:tripId/activities/:activityId/rate/:username', requireTripAccess, async (req, res) => {
   try {
     const tripId = parseInt(req.params.tripId);
     const activityId = parseInt(req.params.activityId);
@@ -171,7 +172,7 @@ router.post('/trips/:tripId/restaurants/:restaurantId/rate', async (req, res) =>
 });
 
 // POST /api/trips/:tripId/restaurants/:restaurantId/rate/:username - Rate a restaurant as specific user
-router.post('/trips/:tripId/restaurants/:restaurantId/rate/:username', async (req, res) => {
+router.post('/trips/:tripId/restaurants/:restaurantId/rate/:username', requireTripAccess, async (req, res) => {
   try {
     const tripId = parseInt(req.params.tripId);
     const restaurantId = parseInt(req.params.restaurantId);
@@ -269,7 +270,7 @@ router.get('/trips/:tripId/activities/:activityId/ratings', async (req, res) => 
 });
 
 // GET /api/trips/:tripId/activities/:activityId/ratings/:username - Get activity ratings with user context
-router.get('/trips/:tripId/activities/:activityId/ratings/:username', async (req, res) => {
+router.get('/trips/:tripId/activities/:activityId/ratings/:username', requireTripAccess, async (req, res) => {
   try {
     const tripId = parseInt(req.params.tripId);
     const activityId = parseInt(req.params.activityId);
@@ -336,7 +337,7 @@ router.get('/trips/:tripId/restaurants/:restaurantId/ratings', async (req, res) 
 });
 
 // GET /api/trips/:tripId/restaurants/:restaurantId/ratings/:username - Get restaurant ratings with user context
-router.get('/trips/:tripId/restaurants/:restaurantId/ratings/:username', async (req, res) => {
+router.get('/trips/:tripId/restaurants/:restaurantId/ratings/:username', requireTripAccess, async (req, res) => {
   try {
     const tripId = parseInt(req.params.tripId);
     const restaurantId = parseInt(req.params.restaurantId);

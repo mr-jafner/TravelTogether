@@ -5,14 +5,14 @@ class Trip {
 
   // Create a new trip
   async create(tripData) {
-    const { name, destinations, startDate, endDate, participants } = tripData;
+    const { name, destinations, startDate, endDate, participants, createdBy } = tripData;
     
     try {
-      // Insert trip
+      // Insert trip with creator information
       const tripResult = await this.db.run(
-        `INSERT INTO trips (name, start_date, end_date) 
-         VALUES (?, ?, ?)`,
-        [name, startDate, endDate]
+        `INSERT INTO trips (name, start_date, end_date, created_by) 
+         VALUES (?, ?, ?, ?)`,
+        [name, startDate, endDate, createdBy]
       );
       
       const tripId = tripResult.id;
@@ -28,16 +28,17 @@ class Trip {
         }
       }
       
-      // Insert participants
+      // Insert participants with role information
       if (participants && participants.length > 0) {
         for (let i = 0; i < participants.length; i++) {
           const participant = participants[i];
           const isCurrentUser = i === 0; // First participant is current user by default
+          const isCreator = createdBy && participant === createdBy; // Mark creator participant
           
           await this.db.run(
-            `INSERT INTO participants (trip_id, name, is_current_user) 
-             VALUES (?, ?, ?)`,
-            [tripId, participant, isCurrentUser ? 1 : 0]
+            `INSERT INTO participants (trip_id, name, is_current_user, role) 
+             VALUES (?, ?, ?, ?)`,
+            [tripId, participant, isCurrentUser ? 1 : 0, isCreator ? 'creator' : 'participant']
           );
         }
       }
