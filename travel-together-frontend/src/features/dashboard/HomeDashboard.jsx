@@ -399,7 +399,7 @@ function HomeDashboard() {
 
       <main className="max-w-6xl mx-auto px-4 py-6 space-y-6">
         {/* Current Trip Alert - Show if there's an in-progress trip */}
-        {(import.meta.env.VITE_DEMO_MODE === 'true' ? data.trips : transformTripData(filteredTripData).trips).some(trip => trip.tripStatus === 'inProgress') && (
+        {(import.meta.env.VITE_DEMO_MODE === 'true' ? data?.trips : transformTripData(filteredTripData).trips)?.some(trip => trip.tripStatus === 'inProgress') && (
           <motion.section 
             className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl shadow-lg border-2 border-green-400 p-6 text-white"
             initial={{ opacity: 0, scale: 0.95 }}
@@ -414,15 +414,15 @@ function HomeDashboard() {
                 <div>
                   <h2 className="text-xl font-bold mb-1">You're Currently Traveling!</h2>
                   <p className="text-green-100">
-                    {(import.meta.env.VITE_DEMO_MODE === 'true' ? data.trips : transformTripData(filteredTripData).trips)
-                      .find(trip => trip.tripStatus === 'inProgress')?.name} - {
-                      (import.meta.env.VITE_DEMO_MODE === 'true' ? data.trips : transformTripData(filteredTripData).trips)
-                      .find(trip => trip.tripStatus === 'inProgress')?.next}
+                    {(import.meta.env.VITE_DEMO_MODE === 'true' ? data?.trips : transformTripData(filteredTripData).trips)
+                      ?.find(trip => trip.tripStatus === 'inProgress')?.name} - {
+                      (import.meta.env.VITE_DEMO_MODE === 'true' ? data?.trips : transformTripData(filteredTripData).trips)
+                      ?.find(trip => trip.tripStatus === 'inProgress')?.next}
                   </p>
                 </div>
               </div>
               <button 
-                onClick={() => navigate(`/trips/${(import.meta.env.VITE_DEMO_MODE === 'true' ? data.trips : transformTripData(filteredTripData).trips).find(trip => trip.tripStatus === 'inProgress')?.id}`)}
+                onClick={() => navigate(`/trips/${(import.meta.env.VITE_DEMO_MODE === 'true' ? data?.trips : transformTripData(filteredTripData).trips)?.find(trip => trip.tripStatus === 'inProgress')?.id}`)}
                 className="px-4 py-2 bg-white text-green-600 rounded-lg font-semibold hover:bg-green-50 transition-colors"
               >
                 View Trip
@@ -449,7 +449,7 @@ function HomeDashboard() {
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 overflow-x-auto">
-            {(import.meta.env.VITE_DEMO_MODE === 'true' ? data.trips : transformTripData(filteredTripData).trips).map((trip, index) => (
+            {(import.meta.env.VITE_DEMO_MODE === 'true' ? data?.trips || [] : transformTripData(filteredTripData).trips || []).map((trip, index) => (
               <motion.div
                 key={trip.id}
                 className={`${
