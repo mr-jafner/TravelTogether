@@ -139,6 +139,7 @@ function HomeDashboard() {
 
   // Transform backend trip data to dashboard format with enhanced status detection
   const transformTripData = (trips) => {
+    console.log('TransformTripData called with:', trips);
     const today = new Date();
     
     const transformedTrips = trips.map(trip => {
@@ -449,7 +450,12 @@ function HomeDashboard() {
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 overflow-x-auto">
-            {(import.meta.env.VITE_DEMO_MODE === 'true' ? data?.trips || [] : transformTripData(filteredTripData).trips || []).map((trip, index) => (
+            {(import.meta.env.VITE_DEMO_MODE === 'true' ? data?.trips || [] : (() => {
+              console.log('Filtered trip data:', filteredTripData);
+              const transformed = transformTripData(filteredTripData);
+              console.log('Transformed trip data:', transformed);
+              return transformed.trips || [];
+            })()).map((trip, index) => (
               <motion.div
                 key={trip.id}
                 className={`${
