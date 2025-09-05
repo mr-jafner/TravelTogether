@@ -602,7 +602,7 @@ function HomeDashboard() {
             <p className="text-gray-600 text-sm mb-6">Vote on plans, resolve conflicts, finish tasks.</p>
             
             <div className="space-y-3">
-              {data.todos.map((todo) => (
+              {data?.todos?.map((todo) => (
                 <div
                   key={todo.id}
                   className="p-4 bg-yellow-50 border border-yellow-200 rounded-xl"
@@ -668,7 +668,7 @@ function HomeDashboard() {
               
               {/* Photo Gallery */}
               <div className="grid grid-cols-2 gap-3 mb-6">
-                {data.photos.slice(0, 4).map((photo) => (
+                {data?.photos?.slice(0, 4).map((photo) => (
                   <div
                     key={photo.id}
                     className="aspect-square bg-pink-50 border-2 border-dashed border-pink-200 rounded-xl flex items-center justify-center text-pink-700 text-sm text-center p-2"
@@ -680,7 +680,7 @@ function HomeDashboard() {
               
               {/* Enhanced Feed */}
               <div className="space-y-3">
-                {data.feed.slice(0, activeArchetypes.socialSharer ? 5 : 3).map((post) => (
+                {data?.feed?.slice(0, activeArchetypes.socialSharer ? 5 : 3).map((post) => (
                   <div key={post.id} className="p-4 bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-200 rounded-xl hover:shadow-md transition-all">
                     <div className="flex justify-between items-start mb-2">
                       <div className="flex items-center gap-2">
