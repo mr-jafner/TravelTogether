@@ -586,24 +586,14 @@ function HomeDashboard() {
           </div>
         </motion.section>
 
-        {/* Split Layout: Todos & Social - Conditional based on archetypes */}
-        <div className={`space-y-6 ${
-          activeArchetypes.organizer && activeArchetypes.socialSharer 
-            ? 'lg:grid lg:grid-cols-3 lg:gap-6 lg:space-y-0' 
-            : activeArchetypes.organizer || activeArchetypes.socialSharer 
-              ? 'max-w-4xl mx-auto' 
-              : 'hidden'
-        }`}>
-          {/* To-Dos & Polls - Only show for organizer archetype */}
-          {activeArchetypes.organizer && (
-            <motion.section 
-              className={`bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6 ${
-                activeArchetypes.socialSharer ? 'lg:col-span-2' : ''
-              }`}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
+        {/* Todos Section - Show if organizer is active */}
+        {activeArchetypes.organizer && (
+          <motion.section 
+            className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
             <h2 className="text-lg font-semibold text-gray-900 mb-2">Your To-Dos & Polls</h2>
             <p className="text-gray-600 text-sm mb-6">Vote on plans, resolve conflicts, finish tasks.</p>
             
@@ -653,22 +643,23 @@ function HomeDashboard() {
               ))}
             </div>
           </motion.section>
-          )}
+        )}
 
-          {/* Social Highlights & Map/Calendar - Conditional based on archetypes */}
-          <motion.div 
-            className={`space-y-6 ${
-              !activeArchetypes.organizer && (activeArchetypes.casualTraveler || activeArchetypes.socialSharer) 
-                ? 'lg:col-span-3' 
-                : ''
-            }`}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-          >
-            {/* Social Highlights - Only show for social sharer archetype */}
-            {activeArchetypes.socialSharer && (
-            <section className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+        {/* Social & Map/Calendar Layout - Full width when both are active */}
+        <div className={`space-y-6 ${
+          activeArchetypes.socialSharer && (activeArchetypes.casualTraveler || activeArchetypes.organizer)
+            ? 'lg:grid lg:grid-cols-2 lg:gap-6 lg:space-y-0' 
+            : ''
+        }`}>
+
+          {/* Social Highlights - Only show for social sharer archetype */}
+          {activeArchetypes.socialSharer && (
+            <motion.section 
+              className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+            >
               <h2 className="text-lg font-semibold text-gray-900 mb-2">Social Highlights</h2>
               <p className="text-gray-600 text-sm mb-6">Recent photos & posts from your trips.</p>
               
@@ -744,12 +735,17 @@ function HomeDashboard() {
                   Load more activity
                 </button>
               </div>
-            </section>
+            </motion.section>
             )}
 
-            {/* Enhanced Map/Calendar Tabs - Show for casual traveler or organizer */}
+            {/* Enhanced Map/Calendar Tabs - Show for casual traveler or organizer - Now gets wider space */}
             {(activeArchetypes.casualTraveler || activeArchetypes.organizer) && (
-            <section className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+            <motion.section 
+              className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+            >
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-gray-900">
                   {activeTab === 'map' ? 'Trip Locations' : 'Trip Timeline'}
@@ -786,7 +782,7 @@ function HomeDashboard() {
                 </button>
               </div>
               
-              <div className="h-96 bg-gray-50 border border-gray-200 rounded-xl overflow-hidden">
+              <div className="h-[32rem] bg-gray-50 border border-gray-200 rounded-xl overflow-hidden">
                 {activeTab === 'map' ? (
                   <div className="h-full relative">
                     {/* Enhanced Map View */}
@@ -905,9 +901,8 @@ function HomeDashboard() {
                   </div>
                 )}
               </div>
-            </section>
+            </motion.section>
             )}
-          </motion.div>
         </div>
       </main>
     </div>
