@@ -3,7 +3,8 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { 
   Plus, Calendar, Map, Heart, Share2, Vote, 
-  AlertTriangle, CheckCircle, Clock, Camera
+  AlertTriangle, CheckCircle, Clock, Camera,
+  MapPin, MessageCircle, Users, Bookmark
 } from 'lucide-react';
 import { tripApi, transformTripForFrontend } from '../../services/api';
 import { useUserTripFiltering } from '../../hooks/useUserTripFiltering';
@@ -82,9 +83,11 @@ const demoData = {
     { id: 6, alt: "Sagrada sketch", trip: "bcn" }
   ],
   feed: [
-    { id: 1, user: "Alice", text: "Posted a new photo in Paris", when: "2h", likes: 12 },
-    { id: 2, user: "Ben", text: "Liked your Lake Tahoe post", when: "4h", likes: 1 },
-    { id: 3, user: "Emma", text: "\"Excited for Eiffel Tower!\"", when: "1d", likes: 6 }
+    { id: 1, user: "Alice", text: "Posted a new photo in Paris", when: "2h", likes: 12, liked: false, type: "photo", trip: "paris" },
+    { id: 2, user: "Ben", text: "Liked your Lake Tahoe post", when: "4h", likes: 1, liked: true, type: "like", trip: "tahoe" },
+    { id: 3, user: "Emma", text: "\"Excited for Eiffel Tower!\"", when: "1d", likes: 6, liked: false, type: "comment", trip: "paris" },
+    { id: 4, user: "Chris", text: "Added 3 activities to Barcelona trip", when: "3h", likes: 8, liked: false, type: "activity", trip: "bcn" },
+    { id: 5, user: "Sarah", text: "Updated Lake Tahoe itinerary", when: "5h", likes: 4, liked: true, type: "itinerary", trip: "tahoe" }
   ]
 };
 
@@ -205,10 +208,40 @@ function HomeDashboard() {
       ...prev,
       feed: prev.feed.map(post => 
         post.id === feedId 
-          ? { ...post, likes: post.likes + 1 }
+          ? { 
+              ...post, 
+              likes: post.liked ? post.likes - 1 : post.likes + 1,
+              liked: !post.liked
+            }
           : post
       )
     }));
+  };
+
+  const handleShare = (postId) => {
+    // Share functionality placeholder
+    console.log('Sharing post:', postId);
+  };
+
+  const getActivityIcon = (type) => {
+    switch (type) {
+      case 'photo': return <Camera className="h-4 w-4" />;
+      case 'like': return <Heart className="h-4 w-4" />;
+      case 'comment': return <MessageCircle className="h-4 w-4" />;
+      case 'activity': return <MapPin className="h-4 w-4" />;
+      case 'itinerary': return <Clock className="h-4 w-4" />;
+      default: return <Users className="h-4 w-4" />;
+    }
+  };
+
+  // Handle archetype toggle changes
+  const toggleArchetype = (archetype) => {
+    const updated = {
+      ...activeArchetypes,
+      [archetype]: !activeArchetypes[archetype]
+    };
+    setActiveArchetypes(updated);
+    localStorage.setItem('dashboard-archetypes', JSON.stringify(updated));
   };
 
   if (loading) {
@@ -244,6 +277,46 @@ function HomeDashboard() {
                 className="ml-2"
               />
             </div>
+            
+            {/* Enhanced Archetype Toggles */}
+            <div className="flex items-center gap-2 text-sm">
+              <span className="text-gray-500 hidden sm:inline">View:</span>
+              <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+                <button
+                  onClick={() => toggleArchetype('organizer')}
+                  className={`px-3 py-1 rounded-md transition-colors ${
+                    activeArchetypes.organizer
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-600 hover:bg-gray-200'
+                  }`}
+                  title="Show/hide planning and organization features"
+                >
+                  📋 Organizer
+                </button>
+                <button
+                  onClick={() => toggleArchetype('casualTraveler')}
+                  className={`px-3 py-1 rounded-md transition-colors ${
+                    activeArchetypes.casualTraveler
+                      ? 'bg-green-600 text-white'
+                      : 'text-gray-600 hover:bg-gray-200'
+                  }`}
+                  title="Show/hide casual travel features"
+                >
+                  🏖️ Casual
+                </button>
+                <button
+                  onClick={() => toggleArchetype('socialSharer')}
+                  className={`px-3 py-1 rounded-md transition-colors ${
+                    activeArchetypes.socialSharer
+                      ? 'bg-pink-600 text-white'
+                      : 'text-gray-600 hover:bg-gray-200'
+                  }`}
+                  title="Show/hide social sharing features"
+                >
+                  📸 Social
+                </button>
+              </div>
+            </div>
             <div className="flex gap-1 sm:gap-2 flex-wrap">
               <button 
                 onClick={() => navigate('/trips/create')}
@@ -267,7 +340,7 @@ function HomeDashboard() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-6 space-y-6">
-        {/* Upcoming Trips */}
+        {/* Upcoming Trips - Always show, but badge styling based on organizer mode */}
         <motion.section 
           className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6"
           initial={{ opacity: 0, y: 20 }}
@@ -299,26 +372,34 @@ function HomeDashboard() {
                   <p>Next: {trip.next}</p>
                 </div>
                 
-                {/* Status Badges */}
+                {/* Status Badges - Enhanced based on archetype preferences */}
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {trip.status.conflicts > 0 && (
+                  {/* Organizer badges - conflicts and polls */}
+                  {activeArchetypes.organizer && trip.status.conflicts > 0 && (
                     <span className="flex items-center gap-1 px-2 py-1 bg-red-50 text-red-700 border border-red-200 rounded-full text-xs">
                       <AlertTriangle className="h-3 w-3" />
                       {trip.status.conflicts} conflicts
                     </span>
                   )}
-                  {trip.status.polls > 0 && (
+                  {activeArchetypes.organizer && trip.status.polls > 0 && (
                     <span className="flex items-center gap-1 px-2 py-1 bg-yellow-50 text-yellow-700 border border-yellow-200 rounded-full text-xs">
                       <Clock className="h-3 w-3" />
                       {trip.status.polls} polls open
                     </span>
                   )}
-                  {trip.status.polls === 0 && trip.status.conflicts === 0 && (
+                  {activeArchetypes.organizer && trip.status.polls === 0 && trip.status.conflicts === 0 && !trip.draft && (
                     <span className="flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 border border-green-200 rounded-full text-xs">
                       <CheckCircle className="h-3 w-3" />
                       All set
                     </span>
                   )}
+                  {/* Casual traveler badges - simplified status */}
+                  {activeArchetypes.casualTraveler && !activeArchetypes.organizer && trip.daysAway && trip.daysAway <= 30 && (
+                    <span className="flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 border border-blue-200 rounded-full text-xs">
+                      🏖️ Coming soon
+                    </span>
+                  )}
+                  {/* Draft badge - always show if trip is draft */}
                   {trip.draft && (
                     <span className="px-2 py-1 bg-gray-100 text-gray-600 border border-gray-200 rounded-full text-xs">
                       Draft
@@ -337,15 +418,24 @@ function HomeDashboard() {
           </div>
         </motion.section>
 
-        {/* Split Layout: Todos & Social */}
-        <div className="space-y-6 lg:grid lg:grid-cols-3 lg:gap-6 lg:space-y-0">
-          {/* To-Dos & Polls */}
-          <motion.section 
-            className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
+        {/* Split Layout: Todos & Social - Conditional based on archetypes */}
+        <div className={`space-y-6 ${
+          activeArchetypes.organizer && activeArchetypes.socialSharer 
+            ? 'lg:grid lg:grid-cols-3 lg:gap-6 lg:space-y-0' 
+            : activeArchetypes.organizer || activeArchetypes.socialSharer 
+              ? 'max-w-4xl mx-auto' 
+              : 'hidden'
+        }`}>
+          {/* To-Dos & Polls - Only show for organizer archetype */}
+          {activeArchetypes.organizer && (
+            <motion.section 
+              className={`bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-6 ${
+                activeArchetypes.socialSharer ? 'lg:col-span-2' : ''
+              }`}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
             <h2 className="text-lg font-semibold text-gray-900 mb-2">Your To-Dos & Polls</h2>
             <p className="text-gray-600 text-sm mb-6">Vote on plans, resolve conflicts, finish tasks.</p>
             
@@ -395,15 +485,17 @@ function HomeDashboard() {
               ))}
             </div>
           </motion.section>
+          )}
 
-          {/* Social Highlights & Map/Calendar */}
+          {/* Social Highlights & Map/Calendar - Conditional based on archetypes */}
           <motion.div 
             className="space-y-6"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
           >
-            {/* Social Highlights */}
+            {/* Social Highlights - Only show for social sharer archetype */}
+            {activeArchetypes.socialSharer && (
             <section className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-2">Social Highlights</h2>
               <p className="text-gray-600 text-sm mb-6">Recent photos & posts from your trips.</p>
@@ -420,124 +512,229 @@ function HomeDashboard() {
                 ))}
               </div>
               
-              {/* Feed */}
+              {/* Enhanced Feed */}
               <div className="space-y-3">
-                {data.feed.map((post) => (
-                  <div key={post.id} className="p-4 bg-pink-50 border border-pink-200 rounded-xl">
+                {data.feed.slice(0, activeArchetypes.socialSharer ? 5 : 3).map((post) => (
+                  <div key={post.id} className="p-4 bg-gradient-to-r from-pink-50 to-purple-50 border border-pink-200 rounded-xl hover:shadow-md transition-all">
                     <div className="flex justify-between items-start mb-2">
-                      <span className="text-gray-600 text-sm">{post.user} • {post.when}</span>
-                      <span className="text-gray-500 text-xs">Trip activity</span>
+                      <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 text-gray-600 text-sm">
+                          {getActivityIcon(post.type)}
+                          <span className="font-medium">{post.user}</span>
+                          <span>•</span>
+                          <span>{post.when}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-xs text-gray-500 px-2 py-1 bg-white/60 rounded-full">
+                          {post.trip === 'paris' && '🇫🇷 Paris'}
+                          {post.trip === 'tahoe' && '🏔️ Tahoe'}
+                          {post.trip === 'bcn' && '🇪🇸 Barcelona'}
+                        </span>
+                        <button className="p-1 hover:bg-white/60 rounded">
+                          <Bookmark className="h-3 w-3 text-gray-400" />
+                        </button>
+                      </div>
                     </div>
-                    <p className="text-gray-900 mb-3">{post.text}</p>
-                    <div className="flex gap-3">
-                      <button
-                        onClick={() => handleLike(post.id)}
-                        className="flex items-center gap-1 text-pink-600 text-sm hover:text-pink-700"
-                      >
-                        <Heart className="h-4 w-4" />
-                        Like ({post.likes})
-                      </button>
-                      <button className="flex items-center gap-1 text-gray-600 text-sm hover:text-gray-700">
-                        <Share2 className="h-4 w-4" />
-                        Share
-                      </button>
+                    <p className="text-gray-900 mb-3 leading-relaxed">{post.text}</p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex gap-4">
+                        <button
+                          onClick={() => handleLike(post.id)}
+                          className={`flex items-center gap-1 text-sm hover:scale-105 transition-transform ${
+                            post.liked ? 'text-pink-600' : 'text-gray-600 hover:text-pink-600'
+                          }`}
+                        >
+                          <Heart className={`h-4 w-4 ${post.liked ? 'fill-current' : ''}`} />
+                          {post.likes}
+                        </button>
+                        <button 
+                          onClick={() => handleShare(post.id)}
+                          className="flex items-center gap-1 text-gray-600 text-sm hover:text-blue-600 hover:scale-105 transition-all"
+                        >
+                          <Share2 className="h-4 w-4" />
+                          Share
+                        </button>
+                        <button className="flex items-center gap-1 text-gray-600 text-sm hover:text-gray-700">
+                          <MessageCircle className="h-4 w-4" />
+                          Reply
+                        </button>
+                      </div>
+                      {post.type === 'photo' && (
+                        <span className="text-xs text-blue-600 font-medium">View photo</span>
+                      )}
                     </div>
                   </div>
                 ))}
+                
+                {/* Load more social activity */}
+                <button className="w-full py-3 text-pink-600 text-sm font-medium hover:bg-pink-50 rounded-lg border border-dashed border-pink-300 transition-colors">
+                  Load more activity
+                </button>
               </div>
             </section>
+            )}
 
-            {/* Map/Calendar Tabs - PLACEHOLDER */}
+            {/* Enhanced Map/Calendar Tabs - Show for casual traveler or organizer */}
+            {(activeArchetypes.casualTraveler || activeArchetypes.organizer) && (
             <section className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900">
+                  {activeTab === 'map' ? 'Trip Locations' : 'Trip Timeline'}
+                </h2>
+                <div className="text-xs text-gray-500 px-2 py-1 bg-gray-100 rounded">
+                  {activeTab === 'map' ? '3 destinations' : '2 upcoming trips'}
+                </div>
+              </div>
+              
               <div className="flex border-b border-gray-200 mb-6">
                 <button
                   onClick={() => setActiveTab('map')}
                   className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors ${
                     activeTab === 'map'
-                      ? 'border-blue-600 text-blue-600'
-                      : 'border-transparent text-gray-600 hover:text-gray-900'
+                      ? 'border-blue-600 text-blue-600 bg-blue-50'
+                      : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
                 >
                   <Map className="h-4 w-4" />
-                  Map
+                  <span>Map View</span>
+                  {activeArchetypes.organizer && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">PRO</span>}
                 </button>
                 <button
                   onClick={() => setActiveTab('calendar')}
                   className={`flex items-center gap-2 px-4 py-2 border-b-2 transition-colors ${
                     activeTab === 'calendar'
-                      ? 'border-blue-600 text-blue-600'
-                      : 'border-transparent text-gray-600 hover:text-gray-900'
+                      ? 'border-blue-600 text-blue-600 bg-blue-50'
+                      : 'border-transparent text-gray-600 hover:text-gray-900 hover:bg-gray-50'
                   }`}
                 >
                   <Calendar className="h-4 w-4" />
-                  Calendar
+                  <span>Timeline</span>
+                  {activeArchetypes.casualTraveler && <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">EASY</span>}
                 </button>
               </div>
               
               <div className="h-64 bg-gray-50 border border-gray-200 rounded-xl overflow-hidden">
                 {activeTab === 'map' ? (
                   <div className="h-full relative">
-                    {/* Fake Map View */}
+                    {/* Enhanced Map View */}
                     <div className="absolute inset-0 bg-gradient-to-br from-blue-100 via-green-50 to-blue-50">
-                      {/* Fake map markers */}
-                      <div className="absolute top-12 left-8 w-3 h-3 bg-red-500 rounded-full border-2 border-white shadow-sm"></div>
-                      <div className="absolute top-20 right-12 w-3 h-3 bg-blue-500 rounded-full border-2 border-white shadow-sm"></div>
-                      <div className="absolute bottom-16 left-16 w-3 h-3 bg-orange-500 rounded-full border-2 border-white shadow-sm"></div>
+                      {/* Interactive map markers with trip info */}
+                      <div className="absolute top-12 left-8 group cursor-pointer">
+                        <div className="w-4 h-4 bg-red-500 rounded-full border-2 border-white shadow-lg animate-pulse"></div>
+                        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black/80 text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                          🇫🇷 Paris - 14 days away
+                        </div>
+                      </div>
+                      <div className="absolute top-20 right-12 group cursor-pointer">
+                        <div className="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-lg"></div>
+                        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black/80 text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                          🏔️ Lake Tahoe - 62 days away
+                        </div>
+                      </div>
+                      <div className="absolute bottom-16 left-16 group cursor-pointer">
+                        <div className="w-4 h-4 bg-orange-500 rounded-full border-2 border-white shadow-lg opacity-60"></div>
+                        <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-black/80 text-white px-2 py-1 rounded text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                          🇪🇸 Barcelona - Draft
+                        </div>
+                      </div>
                       
-                      {/* Fake roads */}
-                      <div className="absolute top-16 left-0 w-full h-0.5 bg-gray-400 opacity-30 rotate-12"></div>
-                      <div className="absolute top-32 left-0 w-full h-0.5 bg-gray-400 opacity-30 -rotate-6"></div>
+                      {/* Enhanced map elements */}
+                      <div className="absolute top-16 left-0 w-full h-0.5 bg-blue-400 opacity-20 rotate-12"></div>
+                      <div className="absolute top-32 left-0 w-full h-0.5 bg-green-400 opacity-20 -rotate-6"></div>
                       
-                      {/* Map controls */}
-                      <div className="absolute top-4 right-4 bg-white rounded shadow-sm p-1">
-                        <div className="w-6 h-6 flex items-center justify-center text-xs text-gray-600">+</div>
-                        <div className="w-6 h-6 flex items-center justify-center text-xs text-gray-600 border-t">−</div>
+                      {/* Enhanced map controls */}
+                      <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg p-1">
+                        <button className="w-8 h-8 flex items-center justify-center text-sm text-gray-700 hover:bg-gray-100 rounded">+</button>
+                        <button className="w-8 h-8 flex items-center justify-center text-sm text-gray-700 hover:bg-gray-100 rounded border-t">−</button>
+                      </div>
+                      
+                      {/* Trip route indicator */}
+                      <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg">
+                        <div className="flex items-center gap-2 text-xs">
+                          <MapPin className="h-3 w-3 text-gray-600" />
+                          <span className="font-medium text-gray-700">Multi-destination trips</span>
+                        </div>
                       </div>
                     </div>
-                    <div className="absolute bottom-2 left-2 bg-white px-2 py-1 rounded text-xs text-gray-600">
-                      📍 Paris, Tahoe, Barcelona
+                    
+                    {/* Enhanced map legend */}
+                    <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg">
+                      <div className="flex items-center gap-3 text-xs">
+                        <div className="flex items-center gap-1">
+                          <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                          <span className="text-gray-700">Upcoming</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <div className="w-2 h-2 bg-orange-500 rounded-full opacity-60"></div>
+                          <span className="text-gray-700">Draft</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="h-full p-4">
-                    {/* Fake Calendar View */}
+                  <div className="h-full p-4 bg-gradient-to-br from-green-50 to-blue-50">
+                    {/* Enhanced Calendar View */}
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="font-semibold text-gray-700">May 2025</h3>
+                      <div className="flex gap-1">
+                        <button className="w-6 h-6 flex items-center justify-center text-xs text-gray-600 hover:bg-white/60 rounded">‹</button>
+                        <button className="w-6 h-6 flex items-center justify-center text-xs text-gray-600 hover:bg-white/60 rounded">›</button>
+                      </div>
+                    </div>
+                    
                     <div className="grid grid-cols-7 gap-1 text-xs text-center mb-2">
                       {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(day => (
-                        <div key={day} className="font-medium text-gray-600 p-1">{day}</div>
+                        <div key={day} className="font-semibold text-gray-700 p-1">{day}</div>
                       ))}
                     </div>
-                    <div className="grid grid-cols-7 gap-1 text-xs">
+                    <div className="grid grid-cols-7 gap-1 text-xs mb-3">
                       {Array.from({ length: 35 }, (_, i) => {
                         const day = i - 6;
                         const isCurrentMonth = day > 0 && day <= 31;
                         const hasEvent = [15, 18, 25].includes(day);
+                        const isToday = day === 5; // Mock today
                         return (
-                          <div key={i} className={`aspect-square flex items-center justify-center ${
+                          <div key={i} className={`aspect-square flex items-center justify-center relative ${
                             isCurrentMonth 
-                              ? hasEvent 
-                                ? 'bg-blue-100 text-blue-700 rounded font-medium' 
-                                : 'text-gray-700 hover:bg-gray-100 rounded'
+                              ? isToday
+                                ? 'bg-blue-600 text-white rounded-full font-bold'
+                                : hasEvent 
+                                  ? 'bg-gradient-to-br from-red-100 to-pink-100 text-red-700 rounded-full font-semibold border border-red-200 hover:shadow-sm cursor-pointer' 
+                                  : 'text-gray-700 hover:bg-white/60 rounded cursor-pointer'
                               : 'text-gray-400'
                           }`}>
                             {isCurrentMonth ? day : ''}
+                            {hasEvent && (
+                              <div className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full"></div>
+                            )}
                           </div>
                         );
                       })}
                     </div>
-                    <div className="mt-3 text-xs space-y-1">
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-blue-500 rounded"></div>
-                        <span className="text-gray-600">May 15 - Paris Trip</span>
+                    
+                    {/* Enhanced event list */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-3 p-2 bg-white/70 rounded-lg hover:bg-white/90 cursor-pointer transition-colors">
+                        <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                        <div className="flex-1">
+                          <div className="font-medium text-gray-800 text-xs">May 15 - Paris Trip</div>
+                          <div className="text-gray-600 text-xs">🇫🇷 14 days away</div>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 bg-green-500 rounded"></div>
-                        <span className="text-gray-600">Jul 6 - Lake Tahoe</span>
+                      <div className="flex items-center gap-3 p-2 bg-white/70 rounded-lg hover:bg-white/90 cursor-pointer transition-colors">
+                        <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                        <div className="flex-1">
+                          <div className="font-medium text-gray-800 text-xs">Jul 6 - Lake Tahoe</div>
+                          <div className="text-gray-600 text-xs">🏔️ 62 days away</div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 )}
               </div>
             </section>
+            )}
           </motion.div>
         </div>
       </main>
