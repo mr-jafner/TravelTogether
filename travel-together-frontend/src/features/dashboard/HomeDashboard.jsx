@@ -139,52 +139,63 @@ function HomeDashboard() {
 
   // Transform backend trip data to dashboard format with enhanced status detection
   const transformTripData = (trips) => {
-    console.log('TransformTripData called with:', trips);
+    
+    if (!trips || trips.length === 0) {
+      return {
+        trips: [],
+        todos: demoData.todos,
+        photos: demoData.photos,
+        feed: demoData.feed
+      };
+    }
+    
     const today = new Date();
     
-    const transformedTrips = trips.map(trip => {
-      const startDate = trip.startDate ? new Date(trip.startDate) : null;
-      const endDate = trip.endDate ? new Date(trip.endDate) : null;
-      const daysAway = startDate ? Math.ceil((startDate - today) / (1000 * 60 * 60 * 24)) : null;
-      
-      // Determine trip status
-      let tripStatus = 'draft';
-      let nextAction = 'Set trip dates';
-      
-      if (startDate && endDate) {
-        if (today >= startDate && today <= endDate) {
-          tripStatus = 'inProgress';
-          const daysRemaining = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
-          nextAction = `${daysRemaining} day${daysRemaining === 1 ? '' : 's'} remaining`;
-        } else if (today > endDate) {
-          tripStatus = 'completed';
-          nextAction = 'Trip completed';
-        } else {
-          tripStatus = 'upcoming';
-          nextAction = `Trip starts ${startDate.toLocaleDateString()}`;
+    try {
+      const transformedTrips = trips.map(trip => {
+        const startDate = trip.startDate ? new Date(trip.startDate) : null;
+        const endDate = trip.endDate ? new Date(trip.endDate) : null;
+        const daysAway = startDate ? Math.ceil((startDate - today) / (1000 * 60 * 60 * 24)) : null;
+        
+        // Determine trip status
+        let tripStatus = 'draft';
+        let nextAction = 'Set trip dates';
+        
+        if (startDate && endDate) {
+          if (today >= startDate && today <= endDate) {
+            tripStatus = 'inProgress';
+            const daysRemaining = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
+            nextAction = `${daysRemaining} day${daysRemaining === 1 ? '' : 's'} remaining`;
+          } else if (today > endDate) {
+            tripStatus = 'completed';
+            nextAction = 'Trip completed';
+          } else {
+            tripStatus = 'upcoming';
+            nextAction = `Trip starts ${startDate.toLocaleDateString()}`;
+          }
         }
-      }
-      
-      return {
-        id: trip.id,
-        name: trip.name,
-        destination: Array.isArray(trip.destinations) ? trip.destinations.join(', ') : trip.destinations || 'No destination set',
-        starts: trip.startDate,
-        ends: trip.endDate,
-        daysAway: daysAway,
-        next: nextAction,
-        tripStatus: tripStatus,
-        status: { 
-          polls: Math.floor(Math.random() * 3), // Mock data - could derive from trip activities/restaurants
-          conflicts: tripStatus === 'inProgress' ? Math.floor(Math.random() * 2) : Math.floor(Math.random() * 3)
-        },
-        myRole: 'organizer', // Could be derived from user relationship to trip
-        draft: tripStatus === 'draft'
-      };
-    });
+        
+        const transformedTrip = {
+          id: trip.id,
+          name: trip.name,
+          destination: Array.isArray(trip.destinations) ? trip.destinations.join(', ') : trip.destinations || 'No destination set',
+          starts: trip.startDate,
+          ends: trip.endDate,
+          daysAway: daysAway,
+          next: nextAction,
+          tripStatus: tripStatus,
+          status: { 
+            polls: Math.floor(Math.random() * 3), // Mock data - could derive from trip activities/restaurants
+            conflicts: tripStatus === 'inProgress' ? Math.floor(Math.random() * 2) : Math.floor(Math.random() * 3)
+          },
+          myRole: 'organizer', // Could be derived from user relationship to trip
+          draft: tripStatus === 'draft'
+        };
+        return transformedTrip;
+      });
 
     // Sort trips: in-progress first, then by upcoming dates, then by name
-    return transformedTrips.sort((a, b) => {
+    const sortedTrips = transformedTrips.sort((a, b) => {
       // In-progress trips first
       if (a.tripStatus === 'inProgress' && b.tripStatus !== 'inProgress') return -1;
       if (b.tripStatus === 'inProgress' && a.tripStatus !== 'inProgress') return 1;
@@ -201,11 +212,20 @@ function HomeDashboard() {
     });
 
     return {
-      trips: transformedTrips,
-      todos: demoData.todos, // Keep demo todos for now - these would be derived from trip issues
-      photos: demoData.photos, // Keep demo photos - these would come from social features later
-      feed: demoData.feed // Keep demo feed - this would come from user activity
+      trips: sortedTrips,
+      todos: demoData.todos,
+      photos: demoData.photos,
+      feed: demoData.feed
     };
+    } catch (error) {
+      console.error('Error in transformTripData:', error);
+      return {
+        trips: [],
+        todos: demoData.todos,
+        photos: demoData.photos,
+        feed: demoData.feed
+      };
+    }
   };
 
   // Load data (demo mode or API)
@@ -279,7 +299,6 @@ function HomeDashboard() {
 
   const handleShare = (postId) => {
     // Share functionality placeholder
-    console.log('Sharing post:', postId);
   };
 
   const getActivityIcon = (type) => {
@@ -451,11 +470,10 @@ function HomeDashboard() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 overflow-x-auto">
             {(import.meta.env.VITE_DEMO_MODE === 'true' ? data?.trips || [] : (() => {
-              console.log('Filtered trip data:', filteredTripData);
               const transformed = transformTripData(filteredTripData);
-              console.log('Transformed trip data:', transformed);
               return transformed.trips || [];
-            })()).map((trip, index) => (
+            })()).map((trip, index) => {
+              return (
               <motion.div
                 key={trip.id}
                 className={`${
@@ -582,7 +600,8 @@ function HomeDashboard() {
                   )}
                 </div>
               </motion.div>
-            ))}
+              );
+            })}
           </div>
         </motion.section>
 
@@ -738,8 +757,8 @@ function HomeDashboard() {
             </motion.section>
             )}
 
-            {/* Enhanced Map/Calendar Tabs - Show for casual traveler or organizer - Now gets wider space */}
-            {(activeArchetypes.casualTraveler || activeArchetypes.organizer) && (
+          {/* Enhanced Map/Calendar Tabs - Show for casual traveler or organizer - Now gets wider space */}
+          {(activeArchetypes.casualTraveler || activeArchetypes.organizer) && (
             <motion.section 
               className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6"
               initial={{ opacity: 0, y: 20 }}
@@ -902,7 +921,7 @@ function HomeDashboard() {
                 )}
               </div>
             </motion.section>
-            )}
+          )}
         </div>
       </main>
     </div>
