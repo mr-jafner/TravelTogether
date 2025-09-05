@@ -216,6 +216,36 @@
   3. Verify site loads at https://jafner.com/traveltogether/
 - **PM2 Service Management**: `pm2 restart traveltogether-api` after backend changes
 
+### **Permission System & Username Integration Lessons (2025-09-04)**
+- **Backend Security Architecture**: Middleware-based permission enforcement is critical - frontend permissions can be bypassed by direct API calls
+- **Database Migration Strategy**: Use migration files for schema updates, apply with `runMigration()` function for existing production data
+- **Username Context Integration**: Frontend UserContext must be properly integrated with backend creator assignment systems
+- **Role-Based Access Control**: Creator vs participant roles need database tracking with `created_by` and `role` columns
+- **API Parameter Consistency**: All protected endpoints must consistently require username parameters for authorization
+- **Username Display UX**: Trip creation components must show actual usernames ("Alex Chen (you)") instead of generic placeholders ("you")
+- **Permission Middleware Pattern**: `requireTripAccess(req, res, next)` validates user participation before allowing trip access
+- **Trip Creation Workflow**: Creator assignment requires passing `createdBy` parameter to backend and using actual username in participants array
+- **Production Database Updates**: Schema changes require careful migration deployment with existing data preservation
+- **API Security Testing**: Always test both authorized and unauthorized access attempts to verify middleware protection
+
+### **Database Schema Evolution Lessons (2025-09-04)**
+- **Migration File Structure**: Use versioned migration files (001-add-permission-system.sql) for tracking schema changes
+- **Column Addition Strategy**: `ALTER TABLE trips ADD COLUMN created_by TEXT;` for adding creator tracking
+- **Existing Data Handling**: Migrations must handle NULL values and provide sensible defaults for existing records
+- **Production Schema Updates**: Always backup before applying migrations, test syntax, and verify data integrity post-migration
+- **Role Assignment**: New role column requires proper population during migration based on existing trip ownership patterns
+- **Database Constraint Management**: Foreign key relationships need careful handling during schema updates
+- **SQLite Migration Patterns**: Use transactions for atomic migration operations to prevent partial failures
+
+### **Frontend-Backend Integration Patterns (2025-09-04)**
+- **User Context Propagation**: UserContext changes must trigger useEffect updates in components using username
+- **API Parameter Validation**: Backend middleware must validate username parameters match actual trip participants
+- **Component State Synchronization**: Initial component state must reflect UserContext values, not hardcoded defaults
+- **Permission-Based UI**: Frontend components should reflect user permissions but never rely solely on client-side validation
+- **Username Display Logic**: Use actual username with "(you)" indicator for current user identification
+- **API Error Handling**: Permission denied errors need user-friendly messaging explaining access restrictions
+- **Route Protection**: Both frontend route protection and backend endpoint protection required for comprehensive security
+
 ---
 
 *Follow requirements-driven development: Requirements → Implementation → Validation → Traceability*

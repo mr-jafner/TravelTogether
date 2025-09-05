@@ -95,6 +95,17 @@ function HomeDashboard() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('map');
   
+  // Enhanced archetype toggles
+  const [activeArchetypes, setActiveArchetypes] = useState(() => {
+    // Load from localStorage or default to all active
+    const saved = localStorage.getItem('dashboard-archetypes');
+    return saved ? JSON.parse(saved) : {
+      organizer: true,
+      casualTraveler: true, 
+      socialSharer: true
+    };
+  });
+  
   // Use the reusable filtering hook
   const {
     filteredTrips: filteredTripData,
