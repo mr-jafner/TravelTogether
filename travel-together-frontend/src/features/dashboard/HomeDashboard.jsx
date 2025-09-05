@@ -11,16 +11,31 @@ import { useUserTripFiltering } from '../../hooks/useUserTripFiltering';
 import TripFilterToggle from '../../components/common/TripFilterToggle';
 import { getTripContextMessage } from '../../components/common/TripContextMessage';
 
-// Demo data matching the MVP prototype
+// Demo data with enhanced trip statuses
 const demoData = {
   trips: [
+    { 
+      id: "current-trip", 
+      name: "Tokyo Adventure", 
+      destination: "Tokyo, Japan",
+      starts: "2025-09-02", 
+      ends: "2025-09-08",
+      daysAway: -3, 
+      next: "3 days remaining", 
+      tripStatus: "inProgress",
+      status: { polls: 1, conflicts: 1 }, 
+      myRole: "organizer",
+      draft: false 
+    },
     { 
       id: "paris", 
       name: "Paris", 
       destination: "Paris, France",
       starts: "2025-05-15", 
+      ends: "2025-05-22",
       daysAway: 14, 
-      next: "Louvre visit · Fri 15:00", 
+      next: "Trip starts May 15, 2025", 
+      tripStatus: "upcoming",
       status: { polls: 2, conflicts: 1 }, 
       myRole: "organizer",
       draft: false 
@@ -30,8 +45,10 @@ const demoData = {
       name: "Lake Tahoe", 
       destination: "Lake Tahoe, CA",
       starts: "2025-07-06", 
+      ends: "2025-07-10",
       daysAway: 62, 
-      next: "Cabin check-in Fri 4pm", 
+      next: "Trip starts July 6, 2025", 
+      tripStatus: "upcoming",
       status: { polls: 0, conflicts: 0 }, 
       myRole: "member",
       draft: false 
@@ -41,8 +58,10 @@ const demoData = {
       name: "Barcelona", 
       destination: "Barcelona, Spain",
       starts: null, 
+      ends: null,
       daysAway: null, 
-      next: "Build your itinerary", 
+      next: "Set trip dates", 
+      tripStatus: "draft",
       status: { polls: 0, conflicts: 0 }, 
       myRole: "organizer",
       draft: true 
@@ -118,27 +137,66 @@ function HomeDashboard() {
     isLoggedIn
   } = useUserTripFiltering(allTrips);
 
-  // Transform backend trip data to dashboard format
+  // Transform backend trip data to dashboard format with enhanced status detection
   const transformTripData = (trips) => {
+    const today = new Date();
+    
     const transformedTrips = trips.map(trip => {
       const startDate = trip.startDate ? new Date(trip.startDate) : null;
-      const today = new Date();
+      const endDate = trip.endDate ? new Date(trip.endDate) : null;
       const daysAway = startDate ? Math.ceil((startDate - today) / (1000 * 60 * 60 * 24)) : null;
+      
+      // Determine trip status
+      let tripStatus = 'draft';
+      let nextAction = 'Set trip dates';
+      
+      if (startDate && endDate) {
+        if (today >= startDate && today <= endDate) {
+          tripStatus = 'inProgress';
+          const daysRemaining = Math.ceil((endDate - today) / (1000 * 60 * 60 * 24));
+          nextAction = `${daysRemaining} day${daysRemaining === 1 ? '' : 's'} remaining`;
+        } else if (today > endDate) {
+          tripStatus = 'completed';
+          nextAction = 'Trip completed';
+        } else {
+          tripStatus = 'upcoming';
+          nextAction = `Trip starts ${startDate.toLocaleDateString()}`;
+        }
+      }
       
       return {
         id: trip.id,
         name: trip.name,
         destination: Array.isArray(trip.destinations) ? trip.destinations.join(', ') : trip.destinations || 'No destination set',
         starts: trip.startDate,
-        daysAway: daysAway > 0 ? daysAway : null,
-        next: trip.startDate ? `Trip starts ${startDate?.toLocaleDateString()}` : 'Set trip dates',
+        ends: trip.endDate,
+        daysAway: daysAway,
+        next: nextAction,
+        tripStatus: tripStatus,
         status: { 
-          polls: 0, // Could derive from trip activities/restaurants that need votes
-          conflicts: 0 // Could derive from overlapping activities or missing info
+          polls: Math.floor(Math.random() * 3), // Mock data - could derive from trip activities/restaurants
+          conflicts: tripStatus === 'inProgress' ? Math.floor(Math.random() * 2) : Math.floor(Math.random() * 3)
         },
         myRole: 'organizer', // Could be derived from user relationship to trip
-        draft: !trip.startDate || !trip.endDate || !trip.destinations
+        draft: tripStatus === 'draft'
       };
+    });
+
+    // Sort trips: in-progress first, then by upcoming dates, then by name
+    return transformedTrips.sort((a, b) => {
+      // In-progress trips first
+      if (a.tripStatus === 'inProgress' && b.tripStatus !== 'inProgress') return -1;
+      if (b.tripStatus === 'inProgress' && a.tripStatus !== 'inProgress') return 1;
+      
+      // Then upcoming trips by date
+      if (a.tripStatus === 'upcoming' && b.tripStatus === 'upcoming') {
+        if (a.daysAway && b.daysAway) return a.daysAway - b.daysAway;
+        if (a.daysAway && !b.daysAway) return -1;
+        if (!a.daysAway && b.daysAway) return 1;
+      }
+      
+      // Then by name
+      return a.name.localeCompare(b.name);
     });
 
     return {
@@ -340,6 +398,39 @@ function HomeDashboard() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-6 space-y-6">
+        {/* Current Trip Alert - Show if there's an in-progress trip */}
+        {(import.meta.env.VITE_DEMO_MODE === 'true' ? data.trips : transformTripData(filteredTripData).trips).some(trip => trip.tripStatus === 'inProgress') && (
+          <motion.section 
+            className="bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl shadow-lg border-2 border-green-400 p-6 text-white"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.0 }}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                  <span className="text-2xl">🔥</span>
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold mb-1">You're Currently Traveling!</h2>
+                  <p className="text-green-100">
+                    {(import.meta.env.VITE_DEMO_MODE === 'true' ? data.trips : transformTripData(filteredTripData).trips)
+                      .find(trip => trip.tripStatus === 'inProgress')?.name} - {
+                      (import.meta.env.VITE_DEMO_MODE === 'true' ? data.trips : transformTripData(filteredTripData).trips)
+                      .find(trip => trip.tripStatus === 'inProgress')?.next}
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => navigate(`/trips/${(import.meta.env.VITE_DEMO_MODE === 'true' ? data.trips : transformTripData(filteredTripData).trips).find(trip => trip.tripStatus === 'inProgress')?.id}`)}
+                className="px-4 py-2 bg-white text-green-600 rounded-lg font-semibold hover:bg-green-50 transition-colors"
+              >
+                View Trip
+              </button>
+            </div>
+          </motion.section>
+        )}
+
         {/* Upcoming Trips - Always show, but badge styling based on organizer mode */}
         <motion.section 
           className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6"
@@ -361,15 +452,52 @@ function HomeDashboard() {
             {(import.meta.env.VITE_DEMO_MODE === 'true' ? data.trips : transformTripData(filteredTripData).trips).map((trip, index) => (
               <motion.div
                 key={trip.id}
-                className="bg-gradient-to-b from-blue-50 to-white border border-blue-100 rounded-2xl p-4 min-w-0"
+                className={`${
+                  trip.tripStatus === 'inProgress' 
+                    ? 'bg-gradient-to-b from-green-100 via-emerald-50 to-white border-2 border-green-300 shadow-lg ring-2 ring-green-200' 
+                    : trip.tripStatus === 'upcoming' 
+                      ? 'bg-gradient-to-b from-blue-50 to-white border border-blue-100'
+                      : trip.tripStatus === 'draft'
+                        ? 'bg-gradient-to-b from-gray-50 to-white border border-gray-200'
+                        : 'bg-gradient-to-b from-purple-50 to-white border border-purple-100'
+                } rounded-2xl p-4 min-w-0 relative overflow-hidden`}
                 initial={{ opacity: 0, x: 50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
               >
-                <h3 className="font-semibold text-gray-900 mb-2">{trip.name}</h3>
+                {/* In-progress trip indicator */}
+                {trip.tripStatus === 'inProgress' && (
+                  <div className="absolute top-2 right-2 bg-green-600 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                    🔥 IN PROGRESS
+                  </div>
+                )}
+                <h3 className={`font-semibold mb-2 ${
+                  trip.tripStatus === 'inProgress' ? 'text-green-800 text-lg' : 'text-gray-900'
+                }`}>
+                  {trip.name}
+                </h3>
                 <div className="space-y-1 text-sm text-gray-600 mb-3">
-                  <p>{trip.daysAway ? `${trip.daysAway} days away` : 'No date yet'}</p>
-                  <p>Next: {trip.next}</p>
+                  {trip.tripStatus === 'inProgress' ? (
+                    <>
+                      <p className="text-green-700 font-medium">🔥 Currently traveling!</p>
+                      <p className="text-green-600">Next: {trip.next}</p>
+                    </>
+                  ) : trip.tripStatus === 'upcoming' ? (
+                    <>
+                      <p className="text-blue-700">{trip.daysAway > 0 ? `${trip.daysAway} days away` : 'Starting soon'}</p>
+                      <p>Next: {trip.next}</p>
+                    </>
+                  ) : trip.tripStatus === 'completed' ? (
+                    <>
+                      <p className="text-purple-700">Trip completed</p>
+                      <p>Status: {trip.next}</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-gray-500">Draft trip</p>
+                      <p>Next: {trip.next}</p>
+                    </>
+                  )}
                 </div>
                 
                 {/* Status Badges - Enhanced based on archetype preferences */}
@@ -407,12 +535,46 @@ function HomeDashboard() {
                   )}
                 </div>
                 
-                <button 
-                  onClick={() => navigate(`/trips/${trip.id}`)}
-                  className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Open Trip
-                </button>
+                {/* Enhanced trip action buttons */}
+                <div className="space-y-2">
+                  <button 
+                    onClick={() => navigate(`/trips/${trip.id}`)}
+                    className={`w-full px-4 py-2 rounded-lg font-medium transition-colors ${
+                      trip.tripStatus === 'inProgress'
+                        ? 'bg-green-600 text-white hover:bg-green-700'
+                        : trip.tripStatus === 'upcoming'
+                          ? 'bg-blue-600 text-white hover:bg-blue-700'
+                          : 'bg-gray-600 text-white hover:bg-gray-700'
+                    }`}
+                  >
+                    {trip.tripStatus === 'inProgress' ? '📱 Open Current Trip' : 
+                     trip.tripStatus === 'upcoming' ? '✈️ View Trip' : 
+                     '📝 Edit Draft'}
+                  </button>
+                  
+                  {/* Quick actions for different trip statuses */}
+                  {trip.tripStatus === 'inProgress' && (
+                    <div className="flex gap-2">
+                      <button className="flex-1 px-3 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors">
+                        📍 Check-in
+                      </button>
+                      <button className="flex-1 px-3 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors">
+                        📸 Add Photo
+                      </button>
+                    </div>
+                  )}
+                  
+                  {trip.tripStatus === 'upcoming' && trip.daysAway <= 7 && (
+                    <div className="flex gap-2">
+                      <button className="flex-1 px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors">
+                        ✅ Final Review
+                      </button>
+                      <button className="flex-1 px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors">
+                        🎒 Packing List
+                      </button>
+                    </div>
+                  )}
+                </div>
               </motion.div>
             ))}
           </div>
@@ -489,7 +651,11 @@ function HomeDashboard() {
 
           {/* Social Highlights & Map/Calendar - Conditional based on archetypes */}
           <motion.div 
-            className="space-y-6"
+            className={`space-y-6 ${
+              !activeArchetypes.organizer && (activeArchetypes.casualTraveler || activeArchetypes.socialSharer) 
+                ? 'lg:col-span-3' 
+                : ''
+            }`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
@@ -614,7 +780,7 @@ function HomeDashboard() {
                 </button>
               </div>
               
-              <div className="h-64 bg-gray-50 border border-gray-200 rounded-xl overflow-hidden">
+              <div className="h-96 bg-gray-50 border border-gray-200 rounded-xl overflow-hidden">
                 {activeTab === 'map' ? (
                   <div className="h-full relative">
                     {/* Enhanced Map View */}
