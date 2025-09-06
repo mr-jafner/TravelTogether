@@ -1,6 +1,6 @@
 # TravelTogether - Development Backlog
 
-*Updated: 2025-09-04*  
+*Updated: 2025-09-05*  
 *Format: Task backlog with detailed implementation plans in /ref/plans/*
 
 ## 🚨 **Priority Tasks**
@@ -14,11 +14,20 @@
 **Plan**: See `/ref/plans/user_contextualized_trip_experience.md` - Phase 2 User-Specific Ratings section  
 **Foundation Ready**: User-trip relationship architecture established, filtering system scalable to ratings, permission system provides security
 
-### 3. **Home Dashboard Enhancement** - MEDIUM PRIORITY  
-**Problem**: Dashboard functionality can be enhanced beyond current MVP  
-**Plan**: See `/ref/plans/dashboard/TravelTogether_Dashboard_MVP_Summary.md` for additional features  
-**Estimated Effort**: 1-2 sessions  
-**Key Features**: Enhanced archetype toggles, advanced social feed, improved map/calendar integration
+### ✅ **Enhanced Dashboard Phase 2C** - COMPLETED 2025-09-05
+**Status**: ✅ **FULLY IMPLEMENTED AND DEPLOYED TO PRODUCTION**  
+**Implementation**: Complete dashboard enhancement with archetype-based personalization and improved UX  
+**Key Features Delivered**: Enhanced archetype toggles with localStorage persistence, larger map/calendar views (512px height), smart trip status detection and sorting, in-progress trip alerts, archetype-based conditional rendering  
+**Live Features**: 
+- Enhanced dashboard at production site: https://jafner.com/traveltogether/
+- Archetype toggles (Organizer, Casual Traveler, Social Sharer) with visual personalization
+- Map/calendar views expanded from 256px to 512px for better usability
+- Smart trip sorting: in-progress → upcoming by date → drafts
+- Special styling and alerts for currently active trips
+**Technical Implementation**: Fixed critical data transformation bug, removed debugging console.log statements, localStorage persistence for user preferences  
+**User Experience**: Personalized dashboard views based on travel archetype, better visual hierarchy, improved mobile/desktop layouts  
+**Current Scope**: Complete dashboard enhancement ready for advanced map/calendar integration  
+**Next Phase Ready**: Foundation established for Leaflet/Mapbox map integration and FullCalendar timeline features
 
 ## 🔄 **Medium Priority Features**
 

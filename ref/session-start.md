@@ -246,6 +246,23 @@
 - **API Error Handling**: Permission denied errors need user-friendly messaging explaining access restrictions
 - **Route Protection**: Both frontend route protection and backend endpoint protection required for comprehensive security
 
+### **Enhanced Dashboard Development Lessons (2025-09-05)**
+- **Data Transformation Debugging**: Always verify return object structure matches expected format - `transformTripData` returning array instead of object with `.trips` property caused critical rendering failure
+- **Function Return Format Validation**: Console logging shows data flowing correctly but components expecting `transformed.trips` failing when function returns raw array
+- **JSX Syntax Error Isolation**: JSX syntax warnings can persist in development while core functionality works - debugging console.log statements help isolate data flow issues
+- **Console Cleanup Importance**: Remove all debugging `console.log` statements before production deployment while preserving legitimate `console.error` for troubleshooting
+- **User Feedback Integration**: "Dashboard loads but map/calendar too small" feedback led to layout improvements from 256px to 512px height
+- **Iterative Development Workflow**: Multiple debugging rounds building robust final solution - step-by-step console logging isolates complex data transformation issues
+- **LocalStorage State Persistence**: Archetype preferences should persist across sessions using `localStorage.getItem/setItem` with JSON serialization
+- **Conditional Rendering Architecture**: Archetype-based showing/hiding of dashboard sections requires careful boolean logic and localStorage integration
+
+### **Technical Debugging Patterns (2025-09-05)**
+- **Data Flow Tracing**: Use `console.log('About to map over trips:', transformed.trips)` to identify exactly where data structure breaks down
+- **Function Return Debugging**: Expected `{trips: [...], todos: [...]}` but got `[...]` - return format mismatches cause `undefined` property access
+- **JSX Error vs Functionality**: Component can have JSX syntax warnings but still render correctly - prioritize functional debugging over syntax warnings
+- **Incremental Problem Solving**: User reports "blank trip cards" → trace data flow → identify transformation issue → fix return format → verify solution
+- **Production Code Quality**: Always clean up development debugging artifacts - console.log statements can impact performance and user experience
+
 ---
 
 *Follow requirements-driven development: Requirements → Implementation → Validation → Traceability*
